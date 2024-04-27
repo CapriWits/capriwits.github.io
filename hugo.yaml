@@ -1,4 +1,4 @@
-baseurl: http://capriwits.com
+baseurl: https://capriwits.com
 languageCode: zh-cn
 theme: hugo-theme-stack
 paginate: 5
@@ -24,7 +24,7 @@ services:
         id:
 
 permalinks:
-    post: /p/:slug/
+    post: /post/:slug/
     page: /:slug/
 
 params:
