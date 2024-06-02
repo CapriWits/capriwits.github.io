@@ -1,4 +1,138 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on Capriwits's site</title><link>https://capriwits.com/post/</link><description>Recent content in Posts on Capriwits's site</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><lastBuildDate>Sat, 18 Sep 2021 17:34:24 +0800</lastBuildDate><atom:link href="https://capriwits.com/post/index.xml" rel="self" type="application/rss+xml"/><item><title>关于设计绝对值 abs() 的一些思考</title><link>https://capriwits.com/post/some-thoughts-on-designing-absolute-method/</link><pubDate>Sat, 18 Sep 2021 17:34:24 +0800</pubDate><guid>https://capriwits.com/post/some-thoughts-on-designing-absolute-method/</guid><description>&lt;img src="https://capriwits.com/post/some-thoughts-on-designing-absolute-method/java-programming-cover.png" alt="Featured image of post 关于设计绝对值 abs() 的一些思考" />&lt;h1 id="关于设计绝对值abs的一些思考">关于设计绝对值abs的一些思考
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on Capriwits's site</title><link>https://capriwits.com/post/</link><description>Recent content in Posts on Capriwits's site</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><lastBuildDate>Sun, 02 Jun 2024 18:57:02 +0800</lastBuildDate><atom:link href="https://capriwits.com/post/index.xml" rel="self" type="application/rss+xml"/><item><title>Java 左值和右值的思考</title><link>https://capriwits.com/post/thoughts-on-java-lvalues-and-rvalues/</link><pubDate>Sun, 02 Jun 2024 18:57:02 +0800</pubDate><guid>https://capriwits.com/post/thoughts-on-java-lvalues-and-rvalues/</guid><description>&lt;img src="https://capriwits.com/post/thoughts-on-java-lvalues-and-rvalues/java-programming-cover.png" alt="Featured image of post Java 左值和右值的思考" />&lt;h1 id="java-左值和右值的思考">Java 左值和右值的思考
+&lt;/h1>&lt;p>&lt;img src="https://img.shields.io/badge/JDK-21-red"
+loading="lazy"
+alt="JDK21"
+>&lt;/p>
+&lt;h2 id="前言">前言
+&lt;/h2>&lt;p>刷&lt;a class="link" href="https://leetcode-cn.com/problems/maximize-sum-of-array-after-k-negations/" target="_blank" rel="noopener"
+>算法题&lt;/a>，用到小根堆「PriorityQueue」，
+其中一个操作让我困惑了很久&lt;/p>
+&lt;p>小根堆存储的是原数组为负值的下标，则小根堆堆顶为最小负数的下标&lt;/p>
+&lt;p>本意是循环中，让最小负数取到相反数 &lt;code>k&lt;/code> 次，变成一个正数&lt;/p>
+&lt;p>&lt;code>while (k-- &amp;gt; 0) nums[queue.peek()] = -nums[queue.poll()];&lt;/code>&lt;/p>
+&lt;p>这一操作让我疑惑了很久，根据赋值表达式的性质，应该是从右计算到左，但是如果按照这个逻辑，就会让 &lt;code>poll()&lt;/code> 先进行，后面才 &lt;code>peek()&lt;/code> ，
+这样下标的计算就出错了, 即 &lt;code>peek()&lt;/code> 实际取的下标值已经被 &lt;code>poll()&lt;/code> 出堆了&lt;/p>
+&lt;h2 id="问题复现">问题复现
+&lt;/h2>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;span class="lnt">6
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-java" data-lang="java">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kd">static&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kt">void&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">main&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">String&lt;/span>&lt;span class="o">[]&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">args&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="kt">int&lt;/span>&lt;span class="o">[]&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">nums&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="n">2&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">1&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">};&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">PriorityQueue&lt;/span>&lt;span class="o">&amp;lt;&lt;/span>&lt;span class="n">Integer&lt;/span>&lt;span class="o">&amp;gt;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">pq&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">new&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">PriorityQueue&lt;/span>&lt;span class="o">&amp;lt;&amp;gt;&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">List&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">of&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">1&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">2&lt;/span>&lt;span class="p">));&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">nums&lt;/span>&lt;span class="o">[&lt;/span>&lt;span class="n">pq&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">peek&lt;/span>&lt;span class="p">()&lt;/span>&lt;span class="o">]&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="n">nums&lt;/span>&lt;span class="o">[&lt;/span>&lt;span class="n">pq&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">poll&lt;/span>&lt;span class="p">()&lt;/span>&lt;span class="o">]&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">System&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">out&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">Arrays&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">toString&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">nums&lt;/span>&lt;span class="p">));&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="c1">// [-2, 1, 0]&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>小根存存储原数组下标，此时堆顶为 &lt;code>0&lt;/code>&lt;/p>
+&lt;p>&lt;code>nums[pq.peek()] = -nums[pq.poll()]&lt;/code> 实际执行运行时状态是先执行 &lt;code>peek()&lt;/code>，再执行 &lt;code>poll()&lt;/code>，即从左到右，与赋值运算符 &lt;code>=&lt;/code> 右值赋值给左值不同&lt;/p>
+&lt;p>即 &lt;code>nums[0] = -nums[0]&lt;/code> 取反&lt;/p>
+&lt;h2 id="字节码分析">字节码分析
+&lt;/h2>&lt;p>使用 &lt;code>javap -c Solution.class&lt;/code> 反编译字节码分析&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-gdscript3" data-lang="gdscript3">&lt;span class="line">&lt;span class="cl">&lt;span class="mi">32&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="n">invokestatic&lt;/span> &lt;span class="c1">#15 // InterfaceMethod java/util/List.of:(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/util/List;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="mi">35&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="n">invokespecial&lt;/span> &lt;span class="c1">#21 // Method java/util/PriorityQueue.&amp;#34;&amp;lt;init&amp;gt;&amp;#34;:(Ljava/util/Collection;)V&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="mi">38&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="n">astore_2&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="mi">39&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="n">aload_1&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="mi">40&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="n">aload_2&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="mi">41&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="n">invokevirtual&lt;/span> &lt;span class="c1">#24 // Method java/util/PriorityQueue.peek:()Ljava/lang/Object;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="mi">44&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="n">checkcast&lt;/span> &lt;span class="c1">#10 // class java/lang/Integer&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="mi">47&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="n">invokevirtual&lt;/span> &lt;span class="c1">#28 // Method java/lang/Integer.intValue:()I&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="mi">50&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="n">aload_1&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="mi">51&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="n">aload_2&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="mi">52&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="n">invokevirtual&lt;/span> &lt;span class="c1">#32 // Method java/util/PriorityQueue.poll:()Ljava/lang/Object;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="mi">55&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="n">checkcast&lt;/span> &lt;span class="c1">#10 // class java/lang/Integer&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="mi">58&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="n">invokevirtual&lt;/span> &lt;span class="c1">#28 // Method java/lang/Integer.intValue:()I&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>先是堆的初始化，然后先执行 &lt;code>peek()&lt;/code> 再执行 &lt;code>poll()&lt;/code>, 即从左到右的顺序编译&lt;/p>
+&lt;h2 id="其他实验">其他实验
+&lt;/h2>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-java" data-lang="java">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kd">static&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kt">void&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">main&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">String&lt;/span>&lt;span class="o">[]&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">args&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="kt">int&lt;/span>&lt;span class="o">[]&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">nums&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="n">4&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">5&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">6&lt;/span>&lt;span class="p">};&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">nums&lt;/span>&lt;span class="o">[&lt;/span>&lt;span class="n">getIndex&lt;/span>&lt;span class="p">()&lt;/span>&lt;span class="o">]&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="n">nums&lt;/span>&lt;span class="o">[&lt;/span>&lt;span class="n">getValue&lt;/span>&lt;span class="p">()&lt;/span>&lt;span class="o">]&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="c1">// Should call getIndex first, then getValue&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">System&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">out&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">Arrays&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">toString&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">nums&lt;/span>&lt;span class="p">));&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="c1">// [4, -6, 6]&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kd">static&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kt">int&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">getIndex&lt;/span>&lt;span class="p">()&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">System&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">out&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;getIndex called&amp;#34;&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">1&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kd">static&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kt">int&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">getValue&lt;/span>&lt;span class="p">()&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">System&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">out&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;getValue called&amp;#34;&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">2&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;blockquote>
+&lt;p>getIndex called&lt;br>
+getValue called&lt;br>
+[4, -6, 6]&lt;/p>
+&lt;/blockquote>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-gdscript3" data-lang="gdscript3">&lt;span class="line">&lt;span class="cl">&lt;span class="mi">18&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="n">invokestatic&lt;/span> &lt;span class="c1">#7 // Method getIndex:()I&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="mi">21&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="n">aload_1&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="mi">22&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="n">invokestatic&lt;/span> &lt;span class="c1">#13 // Method getValue:()I&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>同样，编译顺序也是从左至右&lt;/p>
+&lt;h2 id="summary">Summary
+&lt;/h2>&lt;ul>
+&lt;li>不能按照赋值表达式 &lt;code>=&lt;/code> 从右向左运行的思想思考 &lt;code>nums[queue.peek()] = -nums[queue.poll()];&lt;/code>&lt;/li>
+&lt;li>最终的赋值的确会按照右向左执行「赋值操作」，完成 &lt;strong>置相反数&lt;/strong> 的操作&lt;/li>
+&lt;li>但是从最终字节码的执行顺序来看，对于 &lt;strong>表达式&lt;/strong> 的计算，会 &lt;strong>从左向右&lt;/strong> 计算，将前序准备工作「取值」完成后，才进行写操作，赋值。&lt;/li>
+&lt;/ul>
+&lt;h2 id="reference">🔗Reference
+&lt;/h2>&lt;p>&lt;a class="link" href="https://leetcode-cn.com/problems/maximize-sum-of-array-after-k-negations/" target="_blank" rel="noopener"
+>1005. K 次取反后最大化的数组和&lt;/a>&lt;/p></description></item><item><title>关于设计绝对值 abs() 的一些思考</title><link>https://capriwits.com/post/some-thoughts-on-designing-absolute-method/</link><pubDate>Sat, 18 Sep 2021 17:34:24 +0800</pubDate><guid>https://capriwits.com/post/some-thoughts-on-designing-absolute-method/</guid><description>&lt;img src="https://capriwits.com/post/some-thoughts-on-designing-absolute-method/java-programming-cover.png" alt="Featured image of post 关于设计绝对值 abs() 的一些思考" />&lt;h1 id="关于设计绝对值abs的一些思考">关于设计绝对值abs的一些思考
 &lt;/h1>&lt;p>&lt;img src="https://img.shields.io/badge/JDK-1.8-red"
 loading="lazy"
 >&lt;/p>
