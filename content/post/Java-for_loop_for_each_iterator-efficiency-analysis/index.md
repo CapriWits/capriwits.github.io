@@ -14,6 +14,24 @@ comments: true
 draft: false
 ---
 
+<!-- TOC -->
+* [Java For-loop For-each Iterator 效率分析](#java-for-loop-for-each-iterator-效率分析)
+  * [System.nanoTime 计时测试](#systemnanotime-计时测试)
+    * [数量级：1,000](#数量级1000)
+    * [数量级：10,000](#数量级10000)
+    * [数量级：100,000](#数量级100000)
+  * [JMH BenchMark 基准测试](#jmh-benchmark-基准测试)
+    * [基准测试结果分析](#基准测试结果分析)
+  * [三种循环的使用建议](#三种循环的使用建议)
+    * [For-each 优势于 While-loop](#for-each-优势于-while-loop)
+      * [预防Bug](#预防bug)
+      * [为什么要“将局部变量的作用域最小化”](#为什么要将局部变量的作用域最小化)
+    * [For-each 优势于 For-loop](#for-each-优势于-for-loop)
+    * [For-each 无法使用的地方](#for-each-无法使用的地方)
+    * [For-each 拓展使用](#for-each-拓展使用)
+  * [总结](#总结)
+<!-- TOC -->
+
 # Java For-loop For-each Iterator 效率分析
 
 ![JDK21](https://img.shields.io/badge/JDK-21-red)
@@ -241,7 +259,7 @@ while (i.hasNext()) {   // This is bug!
 }
 ```
 
-在第二个 while loop 中，使用了 迭代器 `i` 的判断，实际操作的是 `i2` 迭代器对象, `i` 迭代器发生泄露，而不会轻易被发现，IDE 也不会报错, 所以要利用好 for loop 声明迭代器，控制它的作用范围  
+在第二个 while loop 中，使用了 迭代器 `i` 的判断，实际操作的是 `i2` 迭代器对象, `i` 迭代器发生泄露，而不会轻易被发现，IDE 也不会报错, 所以要利用好 for loop 声明迭代器，控制它的作用范围
 
 上面 bug 程序最终的结果是下面的 while loop 不会执行，因为在上面的 while loop 执行结束之后，迭代器 `i` 就会遍历到尽头，继续判断 `i.hasNext()` 只会返回 `false`
 

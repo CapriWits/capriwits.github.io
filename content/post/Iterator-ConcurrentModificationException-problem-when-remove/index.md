@@ -13,6 +13,14 @@ math: true
 comments: true
 draft: false
 ---
+
+<!-- TOC -->
+* [Iterator remove 时出现 ConcurrentModificationException](#iterator-remove-时出现-concurrentmodificationexception)
+  * [前言](#前言)
+  * [分析](#分析)
+  * [建议用法](#建议用法)
+<!-- TOC -->
+
 # Iterator remove 时出现 ConcurrentModificationException
 
 ![](https://img.shields.io/badge/JDK-1.8-red)
@@ -57,7 +65,7 @@ public class Solution {
 > Exception in thread "main" java.util.ConcurrentModificationException  
 > at java.base/java.util.ArrayList$Itr.checkForComodification(ArrayList.java:937)  
 > at java.base/java.util.ArrayList$Itr.next(ArrayList.java:891)  
-> at Solution.main(Solution.java:14)  
+> at Solution.main(Solution.java:14)
 
 - 然而删除 **倒数第二个** 元素却不会报错
 
@@ -95,7 +103,7 @@ public class Solution {
 
 > a  
 > b  
-> [a, b, d]  
+> [a, b, d]
 
 ## 分析
 
@@ -179,7 +187,7 @@ private class Itr implements Iterator<E> {
 
 > The number of times this list has been structurally modified. Structural modifications are those that change the size of the list, or otherwise perturb it in such a fashion that iterations in progress may yield incorrect results.  
 > This field is used by the iterator and list iterator implementation returned by the iterator and listIterator methods. If the value of this field changes unexpectedly, the iterator (or list iterator) will throw a ConcurrentModificationException in response to the next, remove, previous, set or add operations. This provides fail-fast behavior, rather than non-deterministic behavior in the face of concurrent modification during iteration.  
-> Use of this field by subclasses is optional. If a subclass wishes to provide fail-fast iterators (and list iterators), then it merely has to increment this field in its add(int, E) and remove(int) methods (and any other methods that it overrides that result in structural modifications to the list). A single call to add(int, E) or remove(int) must add no more than one to this field, or the iterators (and list iterators) will throw bogus ConcurrentModificationExceptions. If an implementation does not wish to provide fail-fast iterators, this field may be ignored.  
+> Use of this field by subclasses is optional. If a subclass wishes to provide fail-fast iterators (and list iterators), then it merely has to increment this field in its add(int, E) and remove(int) methods (and any other methods that it overrides that result in structural modifications to the list). A single call to add(int, E) or remove(int) must add no more than one to this field, or the iterators (and list iterators) will throw bogus ConcurrentModificationExceptions. If an implementation does not wish to provide fail-fast iterators, this field may be ignored.
 
 ```java
 protected transient int modCount = 0;
