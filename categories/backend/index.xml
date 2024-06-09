@@ -1,4 +1,778 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Backend on Capriwits's site</title><link>https://capriwits.com/categories/backend/</link><description>Recent content in Backend on Capriwits's site</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><lastBuildDate>Sun, 02 Jun 2024 18:57:02 +0800</lastBuildDate><atom:link href="https://capriwits.com/categories/backend/index.xml" rel="self" type="application/rss+xml"/><item><title>Java 左值和右值的思考</title><link>https://capriwits.com/post/thoughts-on-java-lvalues-and-rvalues/</link><pubDate>Sun, 02 Jun 2024 18:57:02 +0800</pubDate><guid>https://capriwits.com/post/thoughts-on-java-lvalues-and-rvalues/</guid><description>&lt;img src="https://capriwits.com/post/thoughts-on-java-lvalues-and-rvalues/java-programming-cover.png" alt="Featured image of post Java 左值和右值的思考" />&lt;h1 id="java-左值和右值的思考">Java 左值和右值的思考
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Backend on Capriwits's site</title><link>https://capriwits.com/categories/backend/</link><description>Recent content in Backend on Capriwits's site</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><lastBuildDate>Sun, 09 Jun 2024 16:47:46 +0800</lastBuildDate><atom:link href="https://capriwits.com/categories/backend/index.xml" rel="self" type="application/rss+xml"/><item><title>HTTPS 单双向认证及证书相关</title><link>https://capriwits.com/post/https-tls-and-mtls-and-certificate-related/</link><pubDate>Sun, 09 Jun 2024 16:47:46 +0800</pubDate><guid>https://capriwits.com/post/https-tls-and-mtls-and-certificate-related/</guid><description>&lt;img src="https://capriwits.com/post/https-tls-and-mtls-and-certificate-related/mtls-cover.png" alt="Featured image of post HTTPS 单双向认证及证书相关" />&lt;!-- TOC -->
+&lt;ul>
+&lt;li>&lt;a class="link" href="#https-%e5%8d%95%e5%8f%8c%e5%90%91%e8%ae%a4%e8%af%81%e5%8f%8a%e8%af%81%e4%b9%a6%e7%9b%b8%e5%85%b3" >HTTPS 单双向认证及证书相关&lt;/a>
+&lt;ul>
+&lt;li>&lt;a class="link" href="#%e4%b8%80%e4%ba%9b%e5%b8%b8%e8%af%86" >一些常识&lt;/a>
+&lt;ul>
+&lt;li>&lt;a class="link" href="#ca-%e8%af%81%e4%b9%a6%e5%92%8c%e7%a7%81%e9%92%a5" >CA 证书和私钥&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#%e6%9c%8d%e5%8a%a1%e7%ab%af%e5%92%8c%e5%ae%a2%e6%88%b7%e7%ab%afssl%e8%af%81%e4%b9%a6" >服务端和客户端SSL证书&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#%e8%af%81%e4%b9%a6%e6%a0%bc%e5%bc%8f" >证书格式&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#%e8%af%81%e4%b9%a6%e8%af%b7%e6%b1%82" >证书请求&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#%e8%af%81%e4%b9%a6%e9%93%be" >证书链&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;a class="link" href="#https-%e5%8d%95%e5%90%91%e8%ae%a4%e8%af%81ssltls" >HTTPS 单向认证（SSL/TLS)&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#https-%e5%8f%8c%e5%90%91%e8%ae%a4%e8%af%81mtls" >HTTPS 双向认证（mTLS）&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#%e8%87%aa%e7%ad%be%e5%90%8d%e8%af%81%e4%b9%a6-mtls-%e5%ae%9e%e6%88%98" >自签名证书 mTLS 实战&lt;/a>
+&lt;ul>
+&lt;li>&lt;a class="link" href="#%e8%87%aa%e7%ad%be%e5%90%8d%e6%a0%b9%e8%af%81%e4%b9%a6-ca" >自签名根证书 CA&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#%e8%87%aa%e7%ad%be%e5%90%8d%e6%9c%8d%e5%8a%a1%e7%ab%af%e8%af%81%e4%b9%a6" >自签名服务端证书&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#%e8%87%aa%e7%ad%be%e5%90%8d%e5%ae%a2%e6%88%b7%e7%ab%af%e8%af%81%e4%b9%a6" >自签名客户端证书&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#%e9%aa%8c%e8%af%81" >验证&lt;/a>
+&lt;ul>
+&lt;li>&lt;a class="link" href="#%e5%b8%a6%e8%af%81%e4%b9%a6%e7%9a%84%e6%88%90%e5%8a%9f%e8%b0%83%e7%94%a8" >带证书的成功调用&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#%e4%b8%8d%e5%b8%a6%e8%af%81%e4%b9%a6%e7%9a%84%e8%b0%83%e7%94%a8" >不带证书的调用&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;a class="link" href="#reference" >Reference&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;!-- TOC -->
+&lt;h1 id="https-单双向认证及证书相关">HTTPS 单双向认证及证书相关
+&lt;/h1>&lt;h2 id="一些常识">一些常识
+&lt;/h2>&lt;h3 id="ca-证书和私钥">CA 证书和私钥
+&lt;/h3>&lt;ul>
+&lt;li>&lt;strong>CA（Certificate Authority）证书&lt;/strong>：由权威认证机构（CA）签发的数字证书，用于证明证书持有者的身份。CA证书可以自签名，也可以由更上级的CA签名。根CA证书通常是自签名的，用 root.key 签名一个 root.crt 根证书。CA 证书可能是一个根证书（root.crt），也可能是一个中间证书（子 CA 证书）。&lt;/li>
+&lt;li>&lt;strong>CA 私钥&lt;/strong>：用于签发和验证其他证书。CA私钥非常重要，必须妥善保管，确保不会泄露。&lt;/li>
+&lt;li>公钥是存储在证书里的，key 是私钥，用于签发证书&lt;/li>
+&lt;/ul>
+&lt;p>常见 CA 机构，可以签发服务端 SSL 证书&lt;/p>
+&lt;ol>
+&lt;li>Let&amp;rsquo;s Encrypt：Let&amp;rsquo;s Encrypt 是一个免费的、自动化的证书颁发机构，致力于推动全球网站加密化。&lt;/li>
+&lt;li>DigiCert：DigiCert 是一家知名的商业证书颁发机构，提供各种 &lt;code>SSL/TLS&lt;/code> 证书和数字证书解决方案。&lt;/li>
+&lt;li>Sectigo（原名Comodo）：Sectigo 是一家全球领先的数字证书颁发机构，提供 &lt;code>SSL&lt;/code> 证书、代码签名证书等安全解决方案。&lt;/li>
+&lt;li>GlobalSign：GlobalSign 是一家全球性的数字证书颁发机构，提供 &lt;code>SSL&lt;/code> 证书、代码签名证书、身份验证等服务。&lt;/li>
+&lt;li>GoDaddy：GoDaddy 是一家知名的域名注册商，也提供 &lt;code>SSL&lt;/code> 证书和其他网络安全服务。&lt;/li>
+&lt;li>Entrust Datacard：Entrust Datacard 是一家提供数字证书、身份验证和加密解决方案的领先供应商。&lt;/li>
+&lt;/ol>
+&lt;h3 id="服务端和客户端ssl证书">服务端和客户端SSL证书
+&lt;/h3>&lt;ul>
+&lt;li>&lt;strong>服务端SSL证书&lt;/strong>：安装在服务器上的数字证书，用于加密客户端和服务器之间的通信，确保数据的安全性和完整性。通常由 &lt;code>CA&lt;/code> 签发，包含服务器的公钥信息。（&lt;code>server.crt&lt;/code>&lt;/li>
+&lt;li>&lt;strong>客户端SSL证书&lt;/strong>：安装在客户端上的数字证书，用于验证客户端的身份，通常在双向认证（mTLS）中使用。(&lt;code>client.crt&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;h3 id="证书格式">证书格式
+&lt;/h3>&lt;ul>
+&lt;li>&lt;code>X.509&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>X.509&lt;/code> 格式证书是一种标准的公钥证书格式，&lt;code>X.509&lt;/code> 证书的主要特点和组成部分包括：&lt;/p>
+&lt;ol>
+&lt;li>标准化格式：&lt;code>X.509&lt;/code> 定义了一个结构化的证书格式，确保了不同系统之间能够互操作和理解。&lt;/li>
+&lt;li>公钥信息：证书包含了证书持有者的公钥，这是用于加密数据或验证数字签名的关键部分。&lt;/li>
+&lt;li>身份信息：证书还包括证书持有者的身份信息，如组织名称、组织单元、国家/地区等。这些信息帮助验证证书持有者的身份。&lt;/li>
+&lt;li>签名：证书由证书颁发机构（CA）进行数字签名，以确保其完整性和真实性。这意味着如果证书被篡改，签名将不再有效。&lt;/li>
+&lt;li>有效期：每个 &lt;code>X.509&lt;/code> 证书都有一个有效的时间范围，由“开始日期”和“结束日期”定义。这确保了证书的时效性和定期更新需求。&lt;/li>
+&lt;li>证书链和信任：&lt;code>X.509&lt;/code> 证书通常是证书链的一部分，其中每个证书都由上一级证书颁发机构签名，最终追溯到一个受信任的根证书。这种结构建立了信任链，使得终端用户可以验证证书的合法性。&lt;/li>
+&lt;li>扩展性：&lt;code>X.509&lt;/code> 证书支持扩展字段，允许添加额外信息，如密钥用途、证书策略等，以满足不同应用场景的需求&lt;/li>
+&lt;/ol>
+&lt;p>&lt;code>.crt&lt;/code> 后缀证书，可能是 &lt;code>PEM&lt;/code> 编码，也可能是 &lt;code>DER&lt;/code> 编码&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>PEM&lt;/code> (Privacy Enhanced Mail)&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>PEM&lt;/code> 是一种广泛使用的编码格式，特别是安全领域的数据，如证书、密钥等。&lt;code>PEM&lt;/code> 格式使用 &lt;code>Base64&lt;/code> 编码的 &lt;code>ASCII&lt;/code> 文本表示，并带有 &lt;code>&amp;quot;-----BEGIN CERTIFICATE-----&amp;quot;&lt;/code> 和 &lt;code>&amp;quot;-----END CERTIFICATE-----&amp;quot;&lt;/code> 的边界标记。可以以 ASCII 的格式存储 &lt;code>X.509&lt;/code> 格式的证书 crt。&lt;/p>
+&lt;p>证书可以存储&lt;strong>公钥、私钥、证书、证书链、证书请求&lt;/strong>&lt;/p>
+&lt;p>公钥：通常以 &lt;code>“-----BEGIN PUBLIC KEY-----”&lt;/code> 和 &lt;code>“-----END PUBLIC KEY-----”&lt;/code> 为边界&lt;/p>
+&lt;p>私钥：通常以 &lt;code>“-----BEGIN PRIVATE KEY-----”&lt;/code> 和 &lt;code>“-----END PRIVATE KEY-----”&lt;/code> 为边界，或者对于某些类型的私钥（如RSA私钥），可能是 &lt;code>“-----BEGIN RSA PRIVATE KEY-----”&lt;/code> 和 &lt;code>“-----END RSA PRIVATE KEY-----”&lt;/code>&lt;/p>
+&lt;p>证书：包括服务器证书、中间证书等，通常以 &lt;code>“-----BEGIN CERTIFICATE-----”&lt;/code> 和 &lt;code>“-----END CERTIFICATE-----”&lt;/code> 为边界&lt;/p>
+&lt;p>证书请求（如CSR，Certificate Signing Request）：通常以 &lt;code>“-----BEGIN CERTIFICATE REQUEST-----”&lt;/code> 和 &lt;code>“-----END CERTIFICATE REQUEST-----”&lt;/code> 为边界。&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># 查看 PEM 证书信息&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">openssl x509 -in certificate.pem -text -noout
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># PEM 转 DER&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">openssl x509 -in cert.crt -outform der -out cert.der
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;ul>
+&lt;li>&lt;code>DER&lt;/code> (Distinguished Encoding Rules)&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>X.509&lt;/code> 证书在二进制形式下通常使用 &lt;code>DER&lt;/code> 格式。虽然 &lt;code>DER&lt;/code> 本身不是证书格式，但它是 &lt;code>X.509&lt;/code> 证书 &lt;strong>二进制编码&lt;/strong> 的基础。存证书，没有私钥&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># 查看 DER 证书信息&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">openssl x509 -in certificate.der -inform der -text -noout
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># DER 转 PEM&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">openssl x509 -in cert.crt -inform der -outform pem -out cert.pem
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;ul>
+&lt;li>&lt;code>PFX/PKCS12&lt;/code>（Public-Key Cryptography Standards #12）&lt;/li>
+&lt;/ul>
+&lt;p>常用于存储私钥和相关的公钥证书链，以 &lt;code>.pfx&lt;/code> 或 &lt;code>.p12&lt;/code> 为文件扩展名。这种格式可以转换为 &lt;code>PEM&lt;/code> 格式，从而提取出私钥和证书。通常包含私钥、证书和证书链的组合&lt;/p>
+&lt;p>PKCS12 可以包含 &lt;strong>公钥、私钥、证书和证书链&lt;/strong> ，并且有 &lt;strong>密码保护&lt;/strong> ，一般便于不同平台传输，常用于客户端证书（&lt;code>client.crt → client.p12&lt;/code>&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># 查看 p12 证书信息&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">openssl pkcs12 -info -in your_certificate.p12
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># p12 转 pem&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">openssl pkcs12 -in your_certificate.p12 -nocerts -out private_key.pem
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;ul>
+&lt;li>&lt;code>JKS&lt;/code>（Java KeyStore）&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>JKS&lt;/code> 是 Java 中用于存储密钥和证书的专有格式，二进制格式。&lt;code>JKS&lt;/code> 文件通常以 &lt;code>.jks&lt;/code> 为文件扩展名。在 Java 应用程序中管理密钥和证书，包括私钥、证书、证书链等信息。&lt;code>JKS&lt;/code> 文件通常需要密码来保护存储在其中的密钥和证书。&lt;/p>
+&lt;p>生成和转换需要用到 &lt;code>Java keytool&lt;/code>&lt;/p>
+&lt;h3 id="证书请求">证书请求
+&lt;/h3>&lt;p>&lt;code>CSR&lt;/code>（Certificate Signing Request）是一种包含有关组织或个人信息的加密文本，用于向证书颁发机构（CA）申请数字证书。&lt;code>CSR&lt;/code>包含了将包含在数字证书中的 &lt;strong>公钥&lt;/strong>，以及与该公钥相关联的组织信息，如组织名称、域名等。&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># 先创建一个私钥 key&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">openssl genrsa -out root.key &lt;span class="m">4096&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># 再根据 key 生成一个证书请求&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">openssl req -new -out root.csr -key root.key
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># 下面是提示出来需要填写到 csr 的信息，包括国家、省、城市、公司、单位、域名、密码等信息&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">Country Name &lt;span class="o">(&lt;/span>&lt;span class="m">2&lt;/span> letter code&lt;span class="o">)&lt;/span> &lt;span class="o">[&lt;/span>XX&lt;span class="o">]&lt;/span>:cn
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">State or Province Name &lt;span class="o">(&lt;/span>full name&lt;span class="o">)&lt;/span> &lt;span class="o">[]&lt;/span>:bj
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">Locality Name &lt;span class="o">(&lt;/span>eg, city&lt;span class="o">)&lt;/span> &lt;span class="o">[&lt;/span>Default City&lt;span class="o">]&lt;/span>:bj
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">Organization Name &lt;span class="o">(&lt;/span>eg, company&lt;span class="o">)&lt;/span> &lt;span class="o">[&lt;/span>Default Company Ltd&lt;span class="o">]&lt;/span>:alibaba
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">Organizational Unit Name &lt;span class="o">(&lt;/span>eg, section&lt;span class="o">)&lt;/span> &lt;span class="o">[]&lt;/span>:test
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">Common Name &lt;span class="o">(&lt;/span>eg, your name or your servers hostname&lt;span class="o">)&lt;/span> &lt;span class="o">[]&lt;/span>:root
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">Email Address &lt;span class="o">[]&lt;/span>:a.alibaba.com
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">A challenge password &lt;span class="o">[]&lt;/span>:
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">An optional company name &lt;span class="o">[]&lt;/span>:
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># 用 key 和 csr 生成 10 年期限的根证书 root.crt&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">openssl x509 -req -in root.csr -out root.crt -signkey root.key -CAcreateserial -days &lt;span class="m">3650&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>生成的 &lt;code>root.csr&lt;/code> 证书请求，一方面包含公司信息，另一方面包含 key 对应的公钥。&lt;/p>
+&lt;p>用 key 和 csr 就可以签发一个证书 &lt;code>root.crt&lt;/code>。假设公司信息不改变，key 也未泄露，由于公私钥是对应的，理论上等到 &lt;code>root.crt&lt;/code> 过期后，可以再次签发一个 &lt;code>root.crt&lt;/code>，达到续签的目的。&lt;/p>
+&lt;h3 id="证书链">证书链
+&lt;/h3>&lt;p>证书链是指从根证书（Root Certificate）开始，通过中间证书（Intermediate Certificate）逐级签发，直到最终的终端用户证书（End-Entity Certificate）&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>根证书（Root Certificate）&lt;/strong>：自签名的证书，位于证书链的最顶端。根证书由权威认证机构（CA）发行并保存在受信任的存储区中。&lt;/li>
+&lt;li>&lt;strong>中间证书（Intermediate Certificate）&lt;/strong>：由根证书或其他中间证书签发，形成证书链。中间证书用于签发更下级的证书。&lt;/li>
+&lt;li>&lt;strong>终端用户证书（End-Entity Certificate）&lt;/strong>：由根证书或中间证书签发，最终用于服务器或客户端。&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>root.crt → intermediate1.crt → intermediate2.crt → server.crt&lt;/code>&lt;/p>
+&lt;p>以上过程 &lt;code>root.crt&lt;/code> 是根证书，以 &lt;code>root.crt&lt;/code> 为 CA 签发中间证书 &lt;code>intermediate1.crt&lt;/code>，再用 &lt;code>intermediate1.crt&lt;/code> 为 CA 签发 &lt;code>intermediate2.crt&lt;/code> 中间证书，最后 &lt;code>intermediate2.crt&lt;/code> 签发终端用户证书 &lt;code>server.crt&lt;/code>&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">openssl genrsa -out root.key &lt;span class="m">4096&lt;/span> &lt;span class="c1"># 根私钥&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># 根证书&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">openssl req -new -x509 -days &lt;span class="m">3650&lt;/span> -key root.key -out root.crt -subj &lt;span class="s2">&amp;#34;/CN=Root CA&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">openssl genrsa -out intermediate1.key &lt;span class="m">4096&lt;/span> &lt;span class="c1"># 中间证书 1 私钥&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># 中间证书请求 1&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">openssl req -new -key intermediate1.key -out intermediate1.csr -subj &lt;span class="s2">&amp;#34;/CN=Intermediate CA 1&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># 根证书签发中间证书 1&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">openssl x509 -req -in intermediate1.csr -CA root.crt -CAkey root.key -CAcreateserial -out intermediate1.crt -days &lt;span class="m">3650&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">openssl genrsa -out intermediate2.key &lt;span class="m">4096&lt;/span> &lt;span class="c1"># 中间证书 2 私钥&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># 中间证书请求 2&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">openssl req -new -key intermediate2.key -out intermediate2.csr -subj &lt;span class="s2">&amp;#34;/CN=Intermediate CA 2&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># 中间证书 1 做 CA 签发中间证书 2&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">openssl x509 -req -in intermediate2.csr -CA intermediate1.crt -CAkey intermediate1.key -CAcreateserial -out intermediate2.crt -days &lt;span class="m">3650&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">openssl genrsa -out server.key &lt;span class="m">4096&lt;/span> &lt;span class="c1"># 终端用户证书私钥&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># 终端用户证书请求&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">openssl req -new -key server.key -out server.csr -subj &lt;span class="s2">&amp;#34;/CN=server.example.com&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># 中间证书 2 做 CA 签发终端用户证书&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">openssl x509 -req -in server.csr -CA intermediate2.crt -CAkey intermediate2.key -CAcreateserial -out server.crt -days &lt;span class="m">365&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>&lt;strong>根证书（root.crt）&lt;/strong>：通常保存在操作系统或浏览器的受信任证书存储中。作为信任链的根，客户端无需直接访问它。&lt;/p>
+&lt;p>&lt;strong>中间证书一（intermediate1.crt）和中间证书二（intermediate2.crt）&lt;/strong>：保存在服务器上，用于建立完整的证书链。客户端会通过服务器传递的证书链验证服务器证书的可信度。&lt;/p>
+&lt;p>&lt;strong>终端用户证书（server.crt）和私钥（server.key）&lt;/strong>：安装在服务器上，用于加密通信和验证服务器身份。&lt;/p>
+&lt;p>&lt;strong>完整的证书链文件&lt;/strong>：服务器需要提供一个包含所有中间证书的文件，以便客户端可以验证证书链。可以将中间证书和终端证书合并成一个文件。&lt;/p>
+&lt;p>一般来说，证书链的顺序是：&lt;strong>SSL 证书 → 中间证书 → 根证书&lt;/strong>，依次向上游，一般客户端会默认信任根证书，可以省略&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">cat server.crt intermediate2.crt intermediate1.crt &amp;gt; fullchain.crt
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>&lt;strong>服务器配置示例（以Nginx为例）&lt;/strong>：&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;span class="lnt">6
+&lt;/span>&lt;span class="lnt">7
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">server &lt;span class="o">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> listen &lt;span class="m">443&lt;/span> ssl&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> server_name example.com&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ssl_certificate /path/to/fullchain.crt&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ssl_certificate_key /path/to/server.key&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="o">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>&lt;strong>客户端验证证书链&lt;/strong>：&lt;/p>
+&lt;ul>
+&lt;li>客户端验证终端用户证书是否由中间证书二签发。&lt;/li>
+&lt;li>客户端验证中间证书二是否由中间证书一签发。&lt;/li>
+&lt;li>客户端验证中间证书一是否由根证书签发。&lt;/li>
+&lt;li>客户端检查根证书是否在受信任的根证书列表中。&lt;/li>
+&lt;/ul>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># 验证中间证书一是否由根证书签发&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">openssl verify -CAfile root.crt intermediate1.crt &lt;span class="c1"># intermediate1.crt: OK&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># 接下来，验证中间证书二是否由中间证书一签发。&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># 为了验证中间证书二，先创建一个证书链文件，包含根证书和中间证书一。&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">cat root.crt intermediate1.crt &amp;gt; chain1.pem
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">openssl verify -CAfile chain1.pem intermediate2.crt &lt;span class="c1"># intermediate2.crt: OK&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># 最后，验证终端用户证书是否由中间证书二签发。&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># 创建一个证书链文件，包含根证书和所有中间证书。&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">cat root.crt intermediate1.crt intermediate2.crt &amp;gt; chain2.pem
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">openssl verify -CAfile chain2.pem server.crt &lt;span class="c1"># server.crt: OK&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># 为了完整验证整个证书链，你可以使用以下命令验证整个证书链文件 fullchain.crt：&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">cat server.crt intermediate2.crt intermediate1.crt &amp;gt; fullchain.crt
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">openssl verify -CAfile root.crt fullchain.crt &lt;span class="c1"># fullchain.crt: OK&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h2 id="https-单向认证ssltls">HTTPS 单向认证（SSL/TLS)
+&lt;/h2>&lt;p>&lt;img src="https://capriwits.com/post/https-tls-and-mtls-and-certificate-related/TLS.png"
+width="1702"
+height="1106"
+srcset="https://capriwits.com/post/https-tls-and-mtls-and-certificate-related/TLS_hu6f2165ae139fd7111b6816ac9bbdad28_252037_480x0_resize_box_3.png 480w, https://capriwits.com/post/https-tls-and-mtls-and-certificate-related/TLS_hu6f2165ae139fd7111b6816ac9bbdad28_252037_1024x0_resize_box_3.png 1024w"
+loading="lazy"
+alt="TLS 单向认证"
+class="gallery-image"
+data-flex-grow="153"
+data-flex-basis="369px"
+>&lt;/p>
+&lt;ol>
+&lt;li>客户端发起建立HTTPS连接请求，将SSL协议版本的信息发送给服务器端；&lt;/li>
+&lt;li>服务器端将本机的公钥证书（&lt;code>server.crt&lt;/code>）发送给客户端；&lt;/li>
+&lt;li>客户端读取公钥证书（&lt;code>server.crt&lt;/code>），取出了服务端公钥；&lt;/li>
+&lt;li>客户端生成一个随机数（密钥 &lt;code>R&lt;/code>），用刚才得到的服务器公钥去加密这个随机数形成密文，发送给服务端；&lt;/li>
+&lt;li>服务端用自己的私钥（&lt;code>server.key&lt;/code>）去解密这个密文，得到了密钥 &lt;code>R&lt;/code>&lt;/li>
+&lt;li>服务端和客户端在后续通讯过程中就使用这个密钥 &lt;code>R&lt;/code> 进行通信了。&lt;/li>
+&lt;/ol>
+&lt;p>服务端部署时，将 &lt;code>server.crt&lt;/code> 和 &lt;code>server.key&lt;/code> 上传至服务器即可。如果服务端用云服务 LoadBalancer，则将两个文件上传至 LB 绑定的地方，例如阿里云 CLB 界面有证书管理，AWS 有 ACM（AWS Certificate Manager）专门管理证书等；如果服务端用 K8S Ingress 配置 SSL，则将两个文件 base64 到 secret，再将 secret 配置到 ingress 实现 SSL 单向认证。如果用 Nginx，Apache 等服务器，则找到对应的方式上传证书即可。&lt;/p>
+&lt;p>key 私钥用于解密客户端公钥加密的数据，也可以在服务端生成签名。crt 证书配合客户端已经信任的 CA，验证服务端的身份（crt 带有服务端的信息，包括国家、城市、公司、域名、证书起始和过期时间等；&lt;/p>
+&lt;p>一般公网环境，客户端默认在本机都会安装操作系统时，默认信任一些 CA，例如微软系统 IIS 专门管理证书，浏览器自动读取，用户无感；&lt;/p>
+&lt;h2 id="https-双向认证mtls">HTTPS 双向认证（mTLS）
+&lt;/h2>&lt;p>&lt;img src="https://capriwits.com/post/https-tls-and-mtls-and-certificate-related/mTLS.png"
+width="1200"
+height="957"
+srcset="https://capriwits.com/post/https-tls-and-mtls-and-certificate-related/mTLS_hu691c76db58bb20ad1a46de3be4df611c_318787_480x0_resize_box_3.png 480w, https://capriwits.com/post/https-tls-and-mtls-and-certificate-related/mTLS_hu691c76db58bb20ad1a46de3be4df611c_318787_1024x0_resize_box_3.png 1024w"
+loading="lazy"
+alt="mTLS 双向认证"
+class="gallery-image"
+data-flex-grow="125"
+data-flex-basis="300px"
+>&lt;/p>
+&lt;ol>
+&lt;li>客户端发起建立 &lt;code>HTTPS&lt;/code> 连接请求，将 &lt;code>SSL&lt;/code> 协议版本的信息发送给服务端；&lt;/li>
+&lt;li>服务器端将本机的公钥证书（&lt;code>server.crt&lt;/code>）发送给客户端；&lt;/li>
+&lt;li>客户端读取公钥证书（&lt;code>server.crt&lt;/code>），取出了服务端公钥；&lt;/li>
+&lt;li>客户端将客户端公钥证书（&lt;code>client.crt&lt;/code>）发送给服务器端；&lt;/li>
+&lt;li>服务器端使用根证书（&lt;code>root.crt&lt;/code>）解密客户端公钥证书，拿到客户端公钥；&lt;/li>
+&lt;li>客户端发送自己支持的加密方案给服务器端；&lt;/li>
+&lt;li>服务器端根据自己和客户端的能力，选择一个双方都能接受的加密方案，使用客户端的公钥加密后发送给客户端；&lt;/li>
+&lt;li>客户端使用自己的私钥解密加密方案，生成一个随机数 &lt;code>R&lt;/code>，使用服务器公钥加密后传给服务器端；&lt;/li>
+&lt;li>服务端用自己的私钥去解密这个密文，得到了密钥 &lt;code>R&lt;/code>&lt;/li>
+&lt;li>服务端和客户端在后续通讯过程中就使用这个密钥 &lt;code>R&lt;/code> 进行通信了。&lt;/li>
+&lt;/ol>
+&lt;p>证书准备：&lt;/p>
+&lt;ul>
+&lt;li>服务器端公钥证书：&lt;code>server.crt&lt;/code>&lt;/li>
+&lt;li>服务器端私钥文件：&lt;code>server.key&lt;/code>&lt;/li>
+&lt;li>根证书：&lt;code>root.crt&lt;/code>&lt;/li>
+&lt;li>客户端公钥证书：&lt;code>client.crt&lt;/code>&lt;/li>
+&lt;li>客户端私钥文件：&lt;code>client.key&lt;/code>&lt;/li>
+&lt;li>客户端集成证书（包括公钥和私钥，用于浏览器访问场景）：&lt;code>client.p12&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;p>所有证书都可以找 CA 机构签发，如果内网使用，非公众，则可以自建 &lt;code>PKI&lt;/code>（Public Key Infrastructure） 系统自签发。&lt;/p>
+&lt;p>服务器除了单向认证步骤里，上传 &lt;code>server.crt&lt;/code> 和 &lt;code>server.key&lt;/code> 两个文件外，还需要额外添加 CA 证书 &lt;code>root.crt&lt;/code>（假设 CA 证书就是根证书，不是子 CA 证书，否则需要上传整个证书链），这个 &lt;code>client-CA&lt;/code>（&lt;code>root.crt&lt;/code>) 证书相当于服务端也是一个客户端，需要提前信任一个签发 &lt;code>client.crt&lt;/code> 的 CA 证书，便于客户端发送带客户端公钥的 &lt;code>client.crt&lt;/code> 时，验明客户端身份，实现双向认证（即额外增加客户端的身份验证）。&lt;/p>
+&lt;p>因此客户端本地除了已经信任签发 &lt;code>server.crt&lt;/code> 的 CA 证书，也需要上传 &lt;code>client.crt&lt;/code> 和 &lt;code>client.key&lt;/code>，就像服务端一样，为了可以安装浏览器，还需要将 &lt;code>client.crt&lt;/code> 转为 &lt;code>client.p12&lt;/code> 便于安装。&lt;/p>
+&lt;h2 id="自签名证书-mtls-实战">自签名证书 mTLS 实战
+&lt;/h2>&lt;p>找一台机器有 openssl 的 linux 机器模拟自签名&lt;/p>
+&lt;h3 id="自签名根证书-ca">自签名根证书 CA
+&lt;/h3>&lt;p>（1）创建根证书私钥：&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">openssl genrsa -out root.key &lt;span class="m">1024&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>（2）创建根证书请求文件：&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">openssl req -new -out root.csr -key root.key
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>后续参数请自行填写，下面是一个例子：&lt;/p>
+&lt;p>注意：CA 证书 &lt;code>Common Name&lt;/code> 需要保证唯一性，不要与服务端证书或者客户端证书的 &lt;code>Common Name&lt;/code> 相同。&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;span class="lnt">6
+&lt;/span>&lt;span class="lnt">7
+&lt;/span>&lt;span class="lnt">8
+&lt;/span>&lt;span class="lnt">9
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">Country Name &lt;span class="o">(&lt;/span>&lt;span class="m">2&lt;/span> letter code&lt;span class="o">)&lt;/span> &lt;span class="o">[&lt;/span>XX&lt;span class="o">]&lt;/span>:cn
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">State or Province Name &lt;span class="o">(&lt;/span>full name&lt;span class="o">)&lt;/span> &lt;span class="o">[]&lt;/span>:bj
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">Locality Name &lt;span class="o">(&lt;/span>eg, city&lt;span class="o">)&lt;/span> &lt;span class="o">[&lt;/span>Default City&lt;span class="o">]&lt;/span>:bj
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">Organization Name &lt;span class="o">(&lt;/span>eg, company&lt;span class="o">)&lt;/span> &lt;span class="o">[&lt;/span>Default Company Ltd&lt;span class="o">]&lt;/span>:alibaba
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">Organizational Unit Name &lt;span class="o">(&lt;/span>eg, section&lt;span class="o">)&lt;/span> &lt;span class="o">[]&lt;/span>:test
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">Common Name &lt;span class="o">(&lt;/span>eg, your name or your servers hostname&lt;span class="o">)&lt;/span> &lt;span class="o">[]&lt;/span>:root
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">Email Address &lt;span class="o">[]&lt;/span>:a.alibaba.com
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">A challenge password &lt;span class="o">[]&lt;/span>:
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">An optional company name &lt;span class="o">[]&lt;/span>:
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>（3）创建根证书：&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-jsx" data-lang="jsx">&lt;span class="line">&lt;span class="cl">&lt;span class="nx">openssl&lt;/span> &lt;span class="nx">x509&lt;/span> &lt;span class="o">-&lt;/span>&lt;span class="nx">req&lt;/span> &lt;span class="o">-&lt;/span>&lt;span class="k">in&lt;/span> &lt;span class="nx">root&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">csr&lt;/span> &lt;span class="o">-&lt;/span>&lt;span class="nx">out&lt;/span> &lt;span class="nx">root&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">crt&lt;/span> &lt;span class="o">-&lt;/span>&lt;span class="nx">signkey&lt;/span> &lt;span class="nx">root&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">key&lt;/span> &lt;span class="o">-&lt;/span>&lt;span class="nx">CAcreateserial&lt;/span> &lt;span class="o">-&lt;/span>&lt;span class="nx">days&lt;/span> &lt;span class="mi">3650&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>在创建证书请求文件的时候需要注意三点，下面生成服务器请求文件和客户端请求文件均要注意这三点： 根证书的 &lt;code>Common Name&lt;/code> 填写 &lt;code>root&lt;/code> 就可以，所有客户端和服务器端的证书这个字段需要填写域名，一定要注意的是，根证书的这个字段和客户端证书、服务器端证书不能一样； 其他所有字段的填写，根证书、服务器端证书、客户端证书需保持一致最后的密码可以直接回车跳过。&lt;/p>
+&lt;p>经过上面三个命令行，我们最终可以得到一个签名有效期为 10 年的根证书 &lt;code>root.crt&lt;/code>，后面我们可以用这个根证书去颁发服务器证书和客户端证书。&lt;/p>
+&lt;h3 id="自签名服务端证书">自签名服务端证书
+&lt;/h3>&lt;p>（1）生成服务器端证书私钥：&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">openssl genrsa -out server.key &lt;span class="m">1024&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>（2） 生成服务器证书请求文件，过程和注意事项参考根证书，本节不详述：&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">openssl req -new -out server.csr -key server.key
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>（3） 生成服务器端公钥证书&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">openssl x509 -req -in server.csr -out server.crt -signkey server.key -CA root.crt -CAkey root.key -CAcreateserial -days &lt;span class="m">3650&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>经过上面的三个命令，我们得到：&lt;/p>
+&lt;p>&lt;code>server.key&lt;/code>：服务器端的密钥文件 &lt;code>server.crt&lt;/code>：有效期十年的服务器端公钥证书，使用根证书和服务器端私钥文件一起生成&lt;/p>
+&lt;h3 id="自签名客户端证书">自签名客户端证书
+&lt;/h3>&lt;p>（1）生成客户端证书密钥：&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">openssl genrsa -out client.key &lt;span class="m">1024&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">openssl genrsa -out client2.key &lt;span class="m">1024&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>（2） 生成客户端证书请求文件，过程和注意事项参考根证书，本节不详述：&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">openssl req -new -out client.csr -key client.key
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">openssl req -new -out client2.csr -key client2.key
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>（3） 生客户端证书&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">openssl x509 -req -in client.csr -out client.crt -signkey client.key -CA root.crt -CAkey root.key -CAcreateserial -days &lt;span class="m">3650&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">openssl x509 -req -in client2.csr -out client2.crt -signkey client2.key -CA root.crt -CAkey root.key -CAcreateserial -days &lt;span class="m">3650&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>（4） 生客户端p12格式证书，需要输入一个密码，选一个好记的，比如123456&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">openssl pkcs12 -export -clcerts -in client.crt -inkey client.key -out client.p12
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">openssl pkcs12 -export -clcerts -in client2.crt -inkey client2.key -out client2.p12
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>重复使用上面的命令，我们得到两套客户端证书：&lt;/p>
+&lt;ul>
+&lt;li>client.key / client2.key：客户端的私钥文件&lt;/li>
+&lt;li>client.crt / client2.key：有效期十年的客户端证书&lt;/li>
+&lt;/ul>
+&lt;p>使用根证书和客户端私钥一起生成 &lt;code>client.p12/client2.p12&lt;/code>，这个证书文件包含客户端的公钥和私钥，主要用来给浏览器访问使用&lt;/p>
+&lt;h3 id="验证">验证
+&lt;/h3>&lt;p>使用 curl 加上证书路径，可以直接测试 Nginx 的 HTTPS 双向认证是否配置成功。下面我们测试三个用例：&lt;/p>
+&lt;ul>
+&lt;li>使用 &lt;code>client.crt / client.key&lt;/code> 这一套客户端证书来调用服务器端&lt;/li>
+&lt;li>使用 &lt;code>client2.crt / client2.key&lt;/code> 这一套客户端证书来调用服务器端&lt;/li>
+&lt;li>不使用证书来调用服务器端&lt;/li>
+&lt;/ul>
+&lt;h4 id="带证书的成功调用">带证书的成功调用
+&lt;/h4>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;span class="lnt">22
+&lt;/span>&lt;span class="lnt">23
+&lt;/span>&lt;span class="lnt">24
+&lt;/span>&lt;span class="lnt">25
+&lt;/span>&lt;span class="lnt">26
+&lt;/span>&lt;span class="lnt">27
+&lt;/span>&lt;span class="lnt">28
+&lt;/span>&lt;span class="lnt">29
+&lt;/span>&lt;span class="lnt">30
+&lt;/span>&lt;span class="lnt">31
+&lt;/span>&lt;span class="lnt">32
+&lt;/span>&lt;span class="lnt">33
+&lt;/span>&lt;span class="lnt">34
+&lt;/span>&lt;span class="lnt">35
+&lt;/span>&lt;span class="lnt">36
+&lt;/span>&lt;span class="lnt">37
+&lt;/span>&lt;span class="lnt">38
+&lt;/span>&lt;span class="lnt">39
+&lt;/span>&lt;span class="lnt">40
+&lt;/span>&lt;span class="lnt">41
+&lt;/span>&lt;span class="lnt">42
+&lt;/span>&lt;span class="lnt">43
+&lt;/span>&lt;span class="lnt">44
+&lt;/span>&lt;span class="lnt">45
+&lt;/span>&lt;span class="lnt">46
+&lt;/span>&lt;span class="lnt">47
+&lt;/span>&lt;span class="lnt">48
+&lt;/span>&lt;span class="lnt">49
+&lt;/span>&lt;span class="lnt">50
+&lt;/span>&lt;span class="lnt">51
+&lt;/span>&lt;span class="lnt">52
+&lt;/span>&lt;span class="lnt">53
+&lt;/span>&lt;span class="lnt">54
+&lt;/span>&lt;span class="lnt">55
+&lt;/span>&lt;span class="lnt">56
+&lt;/span>&lt;span class="lnt">57
+&lt;/span>&lt;span class="lnt">58
+&lt;/span>&lt;span class="lnt">59
+&lt;/span>&lt;span class="lnt">60
+&lt;/span>&lt;span class="lnt">61
+&lt;/span>&lt;span class="lnt">62
+&lt;/span>&lt;span class="lnt">63
+&lt;/span>&lt;span class="lnt">64
+&lt;/span>&lt;span class="lnt">65
+&lt;/span>&lt;span class="lnt">66
+&lt;/span>&lt;span class="lnt">67
+&lt;/span>&lt;span class="lnt">68
+&lt;/span>&lt;span class="lnt">69
+&lt;/span>&lt;span class="lnt">70
+&lt;/span>&lt;span class="lnt">71
+&lt;/span>&lt;span class="lnt">72
+&lt;/span>&lt;span class="lnt">73
+&lt;/span>&lt;span class="lnt">74
+&lt;/span>&lt;span class="lnt">75
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">#--cert指定客户端公钥证书的路径&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">#--key指定客户端私钥文件的路径&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">#-k 使用本参数不校验证书的合法性，因为我们用的是自签名证书&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">#可以使用-v来观察具体的SSL握手过程&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">curl --cert ./client.crt --key ./client.key https://integration-fred2.fredhuang.com -k -v
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">* Rebuilt URL to: https://47.93.XX.XX/
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">* Trying 47.93.XX.XX...
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">* TCP_NODELAY &lt;span class="nb">set&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">* Connected to 47.93.XX.XX &lt;span class="o">(&lt;/span>47.93.XX.XX&lt;span class="o">)&lt;/span> port &lt;span class="m">443&lt;/span> &lt;span class="o">(&lt;/span>&lt;span class="c1">#0)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">* ALPN, offering h2
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">* ALPN, offering http/1.1
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">* Cipher selection: ALL:!EXPORT:!EXPORT40:!EXPORT56:!aNULL:!LOW:!RC4:@STRENGTH
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">* successfully &lt;span class="nb">set&lt;/span> certificate verify locations:
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">* CAfile: /etc/ssl/cert.pem
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> CApath: none
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">* TLSv1.2 &lt;span class="o">(&lt;/span>OUT&lt;span class="o">)&lt;/span>, TLS handshake, Client hello &lt;span class="o">(&lt;/span>1&lt;span class="o">)&lt;/span>:
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">* TLSv1.2 &lt;span class="o">(&lt;/span>IN&lt;span class="o">)&lt;/span>, TLS handshake, Server hello &lt;span class="o">(&lt;/span>2&lt;span class="o">)&lt;/span>:
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">* TLSv1.2 &lt;span class="o">(&lt;/span>IN&lt;span class="o">)&lt;/span>, TLS handshake, Certificate &lt;span class="o">(&lt;/span>11&lt;span class="o">)&lt;/span>:
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">* TLSv1.2 &lt;span class="o">(&lt;/span>IN&lt;span class="o">)&lt;/span>, TLS handshake, Server key exchange &lt;span class="o">(&lt;/span>12&lt;span class="o">)&lt;/span>:
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">* TLSv1.2 &lt;span class="o">(&lt;/span>IN&lt;span class="o">)&lt;/span>, TLS handshake, Request CERT &lt;span class="o">(&lt;/span>13&lt;span class="o">)&lt;/span>:
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">* TLSv1.2 &lt;span class="o">(&lt;/span>IN&lt;span class="o">)&lt;/span>, TLS handshake, Server finished &lt;span class="o">(&lt;/span>14&lt;span class="o">)&lt;/span>:
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">* TLSv1.2 &lt;span class="o">(&lt;/span>OUT&lt;span class="o">)&lt;/span>, TLS handshake, Certificate &lt;span class="o">(&lt;/span>11&lt;span class="o">)&lt;/span>:
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">* TLSv1.2 &lt;span class="o">(&lt;/span>OUT&lt;span class="o">)&lt;/span>, TLS handshake, Client key exchange &lt;span class="o">(&lt;/span>16&lt;span class="o">)&lt;/span>:
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">* TLSv1.2 &lt;span class="o">(&lt;/span>OUT&lt;span class="o">)&lt;/span>, TLS handshake, CERT verify &lt;span class="o">(&lt;/span>15&lt;span class="o">)&lt;/span>:
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">* TLSv1.2 &lt;span class="o">(&lt;/span>OUT&lt;span class="o">)&lt;/span>, TLS change cipher, Client hello &lt;span class="o">(&lt;/span>1&lt;span class="o">)&lt;/span>:
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">* TLSv1.2 &lt;span class="o">(&lt;/span>OUT&lt;span class="o">)&lt;/span>, TLS handshake, Finished &lt;span class="o">(&lt;/span>20&lt;span class="o">)&lt;/span>:
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">* TLSv1.2 &lt;span class="o">(&lt;/span>IN&lt;span class="o">)&lt;/span>, TLS change cipher, Client hello &lt;span class="o">(&lt;/span>1&lt;span class="o">)&lt;/span>:
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">* TLSv1.2 &lt;span class="o">(&lt;/span>IN&lt;span class="o">)&lt;/span>, TLS handshake, Finished &lt;span class="o">(&lt;/span>20&lt;span class="o">)&lt;/span>:
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">* SSL connection using TLSv1.2 / ECDHE-RSA-AES256-GCM-SHA384
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">* ALPN, server accepted to use http/1.1
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">* Server certificate:
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">* subject: &lt;span class="nv">C&lt;/span>&lt;span class="o">=&lt;/span>CN&lt;span class="p">;&lt;/span> &lt;span class="nv">ST&lt;/span>&lt;span class="o">=&lt;/span>BJ&lt;span class="p">;&lt;/span> &lt;span class="nv">L&lt;/span>&lt;span class="o">=&lt;/span>BJ&lt;span class="p">;&lt;/span> &lt;span class="nv">O&lt;/span>&lt;span class="o">=&lt;/span>Alibaba&lt;span class="p">;&lt;/span> &lt;span class="nv">OU&lt;/span>&lt;span class="o">=&lt;/span>Test&lt;span class="p">;&lt;/span> &lt;span class="nv">CN&lt;/span>&lt;span class="o">=&lt;/span>integration-fred2.fredhuang.com&lt;span class="p">;&lt;/span> &lt;span class="nv">emailAddress&lt;/span>&lt;span class="o">=&lt;/span>a@alibaba.com
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">* start date: Nov &lt;span class="m">2&lt;/span> 01:01:34 &lt;span class="m">2019&lt;/span> GMT
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">* expire date: Oct &lt;span class="m">30&lt;/span> 01:01:34 &lt;span class="m">2029&lt;/span> GMT
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">* issuer: &lt;span class="nv">C&lt;/span>&lt;span class="o">=&lt;/span>CN&lt;span class="p">;&lt;/span> &lt;span class="nv">ST&lt;/span>&lt;span class="o">=&lt;/span>BJ&lt;span class="p">;&lt;/span> &lt;span class="nv">L&lt;/span>&lt;span class="o">=&lt;/span>BJ&lt;span class="p">;&lt;/span> &lt;span class="nv">O&lt;/span>&lt;span class="o">=&lt;/span>Alibaba&lt;span class="p">;&lt;/span> &lt;span class="nv">OU&lt;/span>&lt;span class="o">=&lt;/span>Test&lt;span class="p">;&lt;/span> &lt;span class="nv">CN&lt;/span>&lt;span class="o">=&lt;/span>root&lt;span class="p">;&lt;/span> &lt;span class="nv">emailAddress&lt;/span>&lt;span class="o">=&lt;/span>a@alibaba.com
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">* SSL certificate verify result: unable to get &lt;span class="nb">local&lt;/span> issuer certificate &lt;span class="o">(&lt;/span>20&lt;span class="o">)&lt;/span>, continuing anyway.
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;gt; GET / HTTP/1.1
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;gt; host:integration-fred2.fredhuang.com
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;gt; User-Agent: curl/7.54.0
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;gt; Accept: */*
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;gt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt; HTTP/1.1 &lt;span class="m">200&lt;/span> OK
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt; Server: nginx/1.17.5
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt; Date: Sat, &lt;span class="m">02&lt;/span> Nov &lt;span class="m">2019&lt;/span> 02:39:43 GMT
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt; Content-Type: text/html
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt; Content-Length: &lt;span class="m">612&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt; Last-Modified: Wed, &lt;span class="m">30&lt;/span> Oct &lt;span class="m">2019&lt;/span> 11:29:45 GMT
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt; Connection: keep-alive
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt; ETag: &lt;span class="s2">&amp;#34;5db97429-264&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt; Accept-Ranges: bytes
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt;!DOCTYPE html&amp;gt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt;html&amp;gt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt;head&amp;gt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt;title&amp;gt;Welcome to nginx!&amp;lt;/title&amp;gt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt;style&amp;gt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> body &lt;span class="o">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> width: 35em&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> margin: &lt;span class="m">0&lt;/span> auto&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> font-family: Tahoma, Verdana, Arial, sans-serif&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="o">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt;/style&amp;gt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt;/head&amp;gt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt;body&amp;gt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt;h1&amp;gt;Welcome to nginx!&amp;lt;/h1&amp;gt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt;p&amp;gt;If you see this page, the nginx web server is successfully installed and
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">working. Further configuration is required.&amp;lt;/p&amp;gt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt;p&amp;gt;For online documentation and support please refer to
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt;a &lt;span class="nv">href&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s2">&amp;#34;http://nginx.org/&amp;#34;&lt;/span>&amp;gt;nginx.org&amp;lt;/a&amp;gt;.&amp;lt;br/&amp;gt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">Commercial support is available at
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt;a &lt;span class="nv">href&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s2">&amp;#34;http://nginx.com/&amp;#34;&lt;/span>&amp;gt;nginx.com&amp;lt;/a&amp;gt;.&amp;lt;/p&amp;gt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt;p&amp;gt;&amp;lt;em&amp;gt;Thank you &lt;span class="k">for&lt;/span> using nginx.&amp;lt;/em&amp;gt;&amp;lt;/p&amp;gt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt;/body&amp;gt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt;/html&amp;gt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">* Connection &lt;span class="c1">#0 to host 47.93.XX.XX left intact&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>使用 &lt;code>client2.crt / client2.key&lt;/code> 这一套客户端证书来调用服务器端&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;span class="lnt">22
+&lt;/span>&lt;span class="lnt">23
+&lt;/span>&lt;span class="lnt">24
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">curl --cert ./client2.crt --key ./client2.key https://integration-fred2.fredhuang.com -k
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt;!DOCTYPE html&amp;gt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt;html&amp;gt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt;head&amp;gt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt;title&amp;gt;Welcome to nginx!&amp;lt;/title&amp;gt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt;style&amp;gt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> body &lt;span class="o">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> width: 35em&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> margin: &lt;span class="m">0&lt;/span> auto&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> font-family: Tahoma, Verdana, Arial, sans-serif&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="o">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt;/style&amp;gt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt;/head&amp;gt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt;body&amp;gt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt;h1&amp;gt;Welcome to nginx!&amp;lt;/h1&amp;gt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt;p&amp;gt;If you see this page, the nginx web server is successfully installed and
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">working. Further configuration is required.&amp;lt;/p&amp;gt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt;p&amp;gt;For online documentation and support please refer to
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt;a &lt;span class="nv">href&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s2">&amp;#34;http://nginx.org/&amp;#34;&lt;/span>&amp;gt;nginx.org&amp;lt;/a&amp;gt;.&amp;lt;br/&amp;gt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">Commercial support is available at
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt;a &lt;span class="nv">href&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s2">&amp;#34;http://nginx.com/&amp;#34;&lt;/span>&amp;gt;nginx.com&amp;lt;/a&amp;gt;.&amp;lt;/p&amp;gt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt;p&amp;gt;&amp;lt;em&amp;gt;Thank you &lt;span class="k">for&lt;/span> using nginx.&amp;lt;/em&amp;gt;&amp;lt;/p&amp;gt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt;/body&amp;gt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt;/html&amp;gt;
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h4 id="不带证书的调用">不带证书的调用
+&lt;/h4>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;span class="lnt">6
+&lt;/span>&lt;span class="lnt">7
+&lt;/span>&lt;span class="lnt">8
+&lt;/span>&lt;span class="lnt">9
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">curl https://integration-fred2.fredhuang.com -k
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt;html&amp;gt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt;head&amp;gt;&amp;lt;title&amp;gt;400 No required SSL certificate was sent&amp;lt;/title&amp;gt;&amp;lt;/head&amp;gt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt;body&amp;gt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt;center&amp;gt;&amp;lt;h1&amp;gt;400 Bad Request&amp;lt;/h1&amp;gt;&amp;lt;/center&amp;gt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt;center&amp;gt;No required SSL certificate was sent&amp;lt;/center&amp;gt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt;hr&amp;gt;&amp;lt;center&amp;gt;nginx/1.17.5&amp;lt;/center&amp;gt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt;/body&amp;gt;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&amp;lt;/html&amp;gt;
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>三个用例都符合预期，从第一个测试日志中可以看到，整个通信过程较长，客户端验证服务器端的证书，客户端也将自己的证书上传到服务器端进行验证。使用根证书颁发的两个客户端证书都可以正常发起双向HTTPS认证的调用。没有带客户端证书的调用会被服务器端拒绝服务。&lt;/p>
+&lt;h2 id="reference">Reference
+&lt;/h2>&lt;p>&lt;a class="link" href="https://help.aliyun.com/zh/api-gateway/user-guide/mutual-tls-authentication" target="_blank" rel="noopener"
+>什么是HTTPS双向认证(Mutual TLS authentication)_API 网关(API Gateway)-阿里云帮助中心&lt;/a>&lt;/p>
+&lt;p>&lt;a class="link" href="https://help.aliyun.com/zh/slb/classic-load-balancer/use-cases/configure-mutual-authentication-on-an-https-listener-1" target="_blank" rel="noopener"
+>使用CLB部署HTTPS业务（双向认证）_负载均衡(SLB)-阿里云帮助中心&lt;/a>&lt;/p></description></item><item><title>Java 左值和右值的思考</title><link>https://capriwits.com/post/thoughts-on-java-lvalues-and-rvalues/</link><pubDate>Sun, 02 Jun 2024 18:57:02 +0800</pubDate><guid>https://capriwits.com/post/thoughts-on-java-lvalues-and-rvalues/</guid><description>&lt;img src="https://capriwits.com/post/thoughts-on-java-lvalues-and-rvalues/java-programming-cover.png" alt="Featured image of post Java 左值和右值的思考" />&lt;!-- TOC -->
+&lt;ul>
+&lt;li>&lt;a class="link" href="#java-%e5%b7%a6%e5%80%bc%e5%92%8c%e5%8f%b3%e5%80%bc%e7%9a%84%e6%80%9d%e8%80%83" >Java 左值和右值的思考&lt;/a>
+&lt;ul>
+&lt;li>&lt;a class="link" href="#%e5%89%8d%e8%a8%80" >前言&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#%e9%97%ae%e9%a2%98%e5%a4%8d%e7%8e%b0" >问题复现&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#%e5%ad%97%e8%8a%82%e7%a0%81%e5%88%86%e6%9e%90" >字节码分析&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#%e5%85%b6%e4%bb%96%e5%ae%9e%e9%aa%8c" >其他实验&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#summary" >Summary&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#reference" >🔗Reference&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;!-- TOC -->
+&lt;h1 id="java-左值和右值的思考">Java 左值和右值的思考
 &lt;/h1>&lt;p>&lt;img src="https://img.shields.io/badge/JDK-21-red"
 loading="lazy"
 alt="JDK21"
@@ -10,7 +784,8 @@ alt="JDK21"
 &lt;p>小根堆存储的是原数组为负值的下标，则小根堆堆顶为最小负数的下标&lt;/p>
 &lt;p>本意是循环中，让最小负数取到相反数 &lt;code>k&lt;/code> 次，变成一个正数&lt;/p>
 &lt;p>&lt;code>while (k-- &amp;gt; 0) nums[queue.peek()] = -nums[queue.poll()];&lt;/code>&lt;/p>
-&lt;p>这一操作让我疑惑了很久，根据赋值表达式的性质，应该是从右计算到左，但是如果按照这个逻辑，就会让 &lt;code>poll()&lt;/code> 先进行，后面才 &lt;code>peek()&lt;/code> ，
+&lt;p>这一操作让我疑惑了很久，根据赋值表达式的性质，应该是从右计算到左，但是如果按照这个逻辑，就会让 &lt;code>poll()&lt;/code>
+先进行，后面才 &lt;code>peek()&lt;/code> ，
 这样下标的计算就出错了, 即 &lt;code>peek()&lt;/code> 实际取的下标值已经被 &lt;code>poll()&lt;/code> 出堆了&lt;/p>
 &lt;h2 id="问题复现">问题复现
 &lt;/h2>&lt;div class="highlight">&lt;div class="chroma">
@@ -32,7 +807,8 @@ alt="JDK21"
 &lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
 &lt;/div>
 &lt;/div>&lt;p>小根存存储原数组下标，此时堆顶为 &lt;code>0&lt;/code>&lt;/p>
-&lt;p>&lt;code>nums[pq.peek()] = -nums[pq.poll()]&lt;/code> 实际执行运行时状态是先执行 &lt;code>peek()&lt;/code>，再执行 &lt;code>poll()&lt;/code>，即从左到右，与赋值运算符 &lt;code>=&lt;/code> 右值赋值给左值不同&lt;/p>
+&lt;p>&lt;code>nums[pq.peek()] = -nums[pq.poll()]&lt;/code> 实际执行运行时状态是先执行 &lt;code>peek()&lt;/code>，再执行 &lt;code>poll()&lt;/code>，即从左到右，与赋值运算符 &lt;code>=&lt;/code>
+右值赋值给左值不同&lt;/p>
 &lt;p>即 &lt;code>nums[0] = -nums[0]&lt;/code> 取反&lt;/p>
 &lt;h2 id="字节码分析">字节码分析
 &lt;/h2>&lt;p>使用 &lt;code>javap -c Solution.class&lt;/code> 反编译字节码分析&lt;/p>
@@ -132,7 +908,17 @@ getValue called&lt;br>
 &lt;/ul>
 &lt;h2 id="reference">🔗Reference
 &lt;/h2>&lt;p>&lt;a class="link" href="https://leetcode-cn.com/problems/maximize-sum-of-array-after-k-negations/" target="_blank" rel="noopener"
->1005. K 次取反后最大化的数组和&lt;/a>&lt;/p></description></item><item><title>关于设计绝对值 abs() 的一些思考</title><link>https://capriwits.com/post/some-thoughts-on-designing-absolute-method/</link><pubDate>Sat, 18 Sep 2021 17:34:24 +0800</pubDate><guid>https://capriwits.com/post/some-thoughts-on-designing-absolute-method/</guid><description>&lt;img src="https://capriwits.com/post/some-thoughts-on-designing-absolute-method/java-programming-cover.png" alt="Featured image of post 关于设计绝对值 abs() 的一些思考" />&lt;h1 id="关于设计绝对值abs的一些思考">关于设计绝对值abs的一些思考
+>1005. K 次取反后最大化的数组和&lt;/a>&lt;/p></description></item><item><title>关于设计绝对值 abs() 的一些思考</title><link>https://capriwits.com/post/some-thoughts-on-designing-absolute-method/</link><pubDate>Sat, 18 Sep 2021 17:34:24 +0800</pubDate><guid>https://capriwits.com/post/some-thoughts-on-designing-absolute-method/</guid><description>&lt;img src="https://capriwits.com/post/some-thoughts-on-designing-absolute-method/java-programming-cover.png" alt="Featured image of post 关于设计绝对值 abs() 的一些思考" />&lt;!-- TOC -->
+&lt;ul>
+&lt;li>&lt;a class="link" href="#%e5%85%b3%e4%ba%8e%e8%ae%be%e8%ae%a1%e7%bb%9d%e5%af%b9%e5%80%bcabs%e7%9a%84%e4%b8%80%e4%ba%9b%e6%80%9d%e8%80%83" >关于设计绝对值abs的一些思考&lt;/a>
+&lt;ul>
+&lt;li>&lt;a class="link" href="#%e6%9c%80%e7%bb%88%e5%ae%9e%e7%8e%b0" >最终实现&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#reference" >🔗Reference&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;!-- TOC -->
+&lt;h1 id="关于设计绝对值abs的一些思考">关于设计绝对值abs的一些思考
 &lt;/h1>&lt;p>&lt;img src="https://img.shields.io/badge/JDK-1.8-red"
 loading="lazy"
 >&lt;/p>
@@ -148,7 +934,7 @@ loading="lazy"
 &lt;/span>&lt;/code>&lt;/pre>&lt;/td>
 &lt;td class="lntd">
 &lt;pre tabindex="0" class="chroma">&lt;code class="language-Java" data-lang="Java">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kd">static&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kt">int&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">abs&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kt">int&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">a&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">    &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">a&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">&amp;lt;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">?&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="n">a&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">a&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">a&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">&amp;lt;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">?&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="n">a&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">a&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
 &lt;/div>
@@ -164,12 +950,13 @@ loading="lazy"
 &lt;/span>&lt;/code>&lt;/pre>&lt;/td>
 &lt;td class="lntd">
 &lt;pre tabindex="0" class="chroma">&lt;code class="language-Java" data-lang="Java">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kd">static&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kt">double&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">abs&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kt">double&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">a&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">    &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">a&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">&amp;lt;=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">0D&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">?&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">0D&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">a&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">a&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">a&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">&amp;lt;=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">0D&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">?&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">0D&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">a&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">a&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
 &lt;/div>
 &lt;/div>&lt;p>Java 遵循 &lt;a class="link" href="https://en.wikipedia.org/wiki/IEEE_754-2008" target="_blank" rel="noopener"
->IEEE-754&lt;/a> 标准，因此实现上存在 &lt;code>+0.0&lt;/code> &amp;amp; &lt;code>-0.0&lt;/code>，两者除了文本表示不同，在计算过程中也不同。如：&lt;code>1 / +- 0.0&lt;/code> 得到的结果是 &lt;code>+Infinity&lt;/code> &amp;amp; &lt;code>-Infinity&lt;/code>&lt;/p>
+>IEEE-754&lt;/a> 标准，因此实现上存在 &lt;code>+0.0&lt;/code> &amp;amp; &lt;code>-0.0&lt;/code>
+，两者除了文本表示不同，在计算过程中也不同。如：&lt;code>1 / +- 0.0&lt;/code> 得到的结果是 &lt;code>+Infinity&lt;/code> &amp;amp; &lt;code>-Infinity&lt;/code>&lt;/p>
 &lt;p>&lt;code>abs&lt;/code> 计算结果仍然是负数，出现&lt;strong>错误&lt;/strong>，原因既是 &lt;code>+0.0 == -0.0&lt;/code>&lt;/p>
 &lt;div class="highlight">&lt;div class="chroma">
 &lt;table class="lntable">&lt;tr>&lt;td class="lntd">
@@ -184,22 +971,27 @@ loading="lazy"
 &lt;/span>&lt;span class="lnt"> 9
 &lt;/span>&lt;span class="lnt">10
 &lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
 &lt;/span>&lt;/code>&lt;/pre>&lt;/td>
 &lt;td class="lntd">
 &lt;pre tabindex="0" class="chroma">&lt;code class="language-Java" data-lang="Java">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kd">class&lt;/span> &lt;span class="nc">Solution&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">    &lt;/span>&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kd">static&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kt">void&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">main&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">String&lt;/span>&lt;span class="o">[]&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">args&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">        &lt;/span>&lt;span class="kt">double&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">x&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">0&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">        &lt;/span>&lt;span class="k">if&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">1&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">/&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">abs&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">x&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">&amp;lt;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">            &lt;/span>&lt;span class="n">System&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">out&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;abs(x) &amp;lt; 0&amp;#34;&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">       &lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">   &lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">    &lt;/span>&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kd">static&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kt">double&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">abs&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kt">double&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">a&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">        &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">a&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">&amp;lt;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">?&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="n">a&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">a&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">   &lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kd">static&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kt">void&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">main&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">String&lt;/span>&lt;span class="o">[]&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">args&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="kt">double&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">x&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">0&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">if&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">1&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">/&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">abs&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">x&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">&amp;lt;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">System&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">out&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;abs(x) &amp;lt; 0&amp;#34;&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kd">static&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kt">double&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">abs&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kt">double&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">a&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">a&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">&amp;lt;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">?&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="n">a&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">a&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
 &lt;/div>
-&lt;/div>&lt;p>&lt;strong>尝试解决问题，添加判断条件：&lt;/strong>&lt;code>if (val &amp;lt; 0 || val == -0.0)&lt;/code> 对 &lt;code>-0.0&lt;/code> 单独考虑，进行双重判断，这里采用 &lt;code>Double::compare(double, double)&lt;/code> 实现&lt;/p>
+&lt;/div>&lt;p>&lt;strong>尝试解决问题，添加判断条件：&lt;/strong>&lt;code>if (val &amp;lt; 0 || val == -0.0)&lt;/code> 对 &lt;code>-0.0&lt;/code>
+单独考虑，进行双重判断，这里采用 &lt;code>Double::compare(double, double)&lt;/code> 实现&lt;/p>
 &lt;p>&lt;strong>成功实现&lt;/strong>&lt;/p>
 &lt;div class="highlight">&lt;div class="chroma">
 &lt;table class="lntable">&lt;tr>&lt;td class="lntd">
@@ -212,15 +1004,16 @@ loading="lazy"
 &lt;/span>&lt;/code>&lt;/pre>&lt;/td>
 &lt;td class="lntd">
 &lt;pre tabindex="0" class="chroma">&lt;code class="language-Java" data-lang="Java">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kd">static&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kt">double&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">abs&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kt">double&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">    &lt;/span>&lt;span class="k">if&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">&amp;lt;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">||&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">Double&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">compare&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">0&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">        &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">   &lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">    &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">if&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">&amp;lt;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">||&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">Double&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">compare&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">0&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
 &lt;/div>
 &lt;/div>&lt;p>再追求极致的优化。查看 &lt;a class="link" href="https://github.com/openjdk/jdk/blob/36e2ddad4d2ef3ce27475af6244d0246a8315c0c/src/java.base/share/classes/java/lang/Double.java#L1117" target="_blank" rel="noopener"
->Double::compare&lt;/a> 实现。&lt;/p>
+>Double::compare&lt;/a>
+实现。&lt;/p>
 &lt;p>对于正数进行额外的&lt;strong>两次&lt;/strong>比较, 对于 &lt;code>-0.0&lt;/code> 进行额外的 &lt;strong>三次&lt;/strong> 比较, 对于 &lt;code>+0.0&lt;/code> 进行额外的 &lt;strong>四次&lt;/strong> 比较&lt;/p>
 &lt;div class="highlight">&lt;div class="chroma">
 &lt;table class="lntable">&lt;tr>&lt;td class="lntd">
@@ -241,49 +1034,48 @@ loading="lazy"
 &lt;/span>&lt;/code>&lt;/pre>&lt;/td>
 &lt;td class="lntd">
 &lt;pre tabindex="0" class="chroma">&lt;code class="language-Java" data-lang="Java">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kd">static&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kt">int&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">compare&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kt">double&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">d1&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kt">double&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">d2&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">    &lt;/span>&lt;span class="k">if&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">d1&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">&amp;lt;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">d2&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">        &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="n">1&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">           &lt;/span>&lt;span class="c1">// Neither val is NaN, thisVal is smaller&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">    &lt;/span>&lt;span class="k">if&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">d1&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">&amp;gt;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">d2&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">        &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">1&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">            &lt;/span>&lt;span class="c1">// Neither val is NaN, thisVal is larger&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">if&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">d1&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">&amp;lt;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">d2&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="n">1&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="c1">// Neither val is NaN, thisVal is smaller&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">if&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">d1&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">&amp;gt;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">d2&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">1&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="c1">// Neither val is NaN, thisVal is larger&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">    &lt;/span>&lt;span class="c1">// Cannot use doubleToRawLongBits because of possibility of NaNs.&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">    &lt;/span>&lt;span class="kt">long&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">thisBits&lt;/span>&lt;span class="w">    &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">Double&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">doubleToLongBits&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">d1&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">    &lt;/span>&lt;span class="kt">long&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">anotherBits&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">Double&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">doubleToLongBits&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">d2&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="c1">// Cannot use doubleToRawLongBits because of possibility of NaNs.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="kt">long&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">thisBits&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">Double&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">doubleToLongBits&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">d1&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="kt">long&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">anotherBits&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">Double&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">doubleToLongBits&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">d2&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">    &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">thisBits&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">anotherBits&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">?&lt;/span>&lt;span class="w">  &lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="c1">// Values are equal&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">           &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">thisBits&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">&amp;lt;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">anotherBits&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">?&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="n">1&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="c1">// (-0.0, 0.0) or (!NaN, NaN)&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">             &lt;/span>&lt;span class="n">1&lt;/span>&lt;span class="p">));&lt;/span>&lt;span class="w">                          &lt;/span>&lt;span class="c1">// (0.0, -0.0) or (NaN, !NaN)&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">thisBits&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">anotherBits&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">?&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="c1">// Values are equal&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">thisBits&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">&amp;lt;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">anotherBits&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">?&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="n">1&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="c1">// (-0.0, 0.0) or (!NaN, NaN)&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">1&lt;/span>&lt;span class="p">));&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="c1">// (0.0, -0.0) or (NaN, !NaN)&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
 &lt;/div>
 &lt;/div>&lt;p>&lt;strong>而实际上，要想实现只需要&lt;/strong> &lt;code>Double::doubleToLongBits&lt;/code> 方法，将 &lt;code>Double&lt;/code> 转 &lt;code>Long&lt;/code>&lt;/p>
 &lt;div class="highlight">&lt;div class="chroma">
 &lt;table class="lntable">&lt;tr>&lt;td class="lntd">
-&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
-&lt;/span>&lt;span class="lnt"> 2
-&lt;/span>&lt;span class="lnt"> 3
-&lt;/span>&lt;span class="lnt"> 4
-&lt;/span>&lt;span class="lnt"> 5
-&lt;/span>&lt;span class="lnt"> 6
-&lt;/span>&lt;span class="lnt"> 7
-&lt;/span>&lt;span class="lnt"> 8
-&lt;/span>&lt;span class="lnt"> 9
-&lt;/span>&lt;span class="lnt">10
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;span class="lnt">6
+&lt;/span>&lt;span class="lnt">7
+&lt;/span>&lt;span class="lnt">8
+&lt;/span>&lt;span class="lnt">9
 &lt;/span>&lt;/code>&lt;/pre>&lt;/td>
 &lt;td class="lntd">
-&lt;pre tabindex="0" class="chroma">&lt;code class="language-Java" data-lang="Java">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">private&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kd">static&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kd">final&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kt">long&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">MINUS_ZERO_LONG_BITS&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">        &lt;/span>&lt;span class="n">Double&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">doubleToLongBits&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">0&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-Java" data-lang="Java">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">private&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kd">static&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kd">final&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kt">long&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">MINUS_ZERO_LONG_BITS&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">Double&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">doubleToLongBits&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">0&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kd">static&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kt">double&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">abs&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kt">double&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">    &lt;/span>&lt;span class="k">if&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">&amp;lt;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">||&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">            &lt;/span>&lt;span class="n">Double&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">doubleToLongBits&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">MINUS_ZERO_LONG_BITS&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">        &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">   &lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">    &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">if&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">&amp;lt;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">||&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">Double&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">doubleToLongBits&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">MINUS_ZERO_LONG_BITS&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
 &lt;/div>
-&lt;/div>&lt;p>不过 &lt;code>Double::doubleToLongBits&lt;/code> 也只有微不足道的性能提升，因为它会对 &lt;code>NaN&lt;/code> 进行约束，&lt;code>NaN&lt;/code> 会赋值为 &lt;code>0x7ff8000000000000L&lt;/code> ，如果确保 &lt;code>abs&lt;/code> 入参肯定是 &lt;code>double&lt;/code>，则只需要取出 &lt;code>Double::doubleToRawLongBits&lt;/code>&lt;/p>
+&lt;/div>&lt;p>不过 &lt;code>Double::doubleToLongBits&lt;/code> 也只有微不足道的性能提升，因为它会对 &lt;code>NaN&lt;/code> 进行约束，&lt;code>NaN&lt;/code> 会赋值为 &lt;code>0x7ff8000000000000L&lt;/code>
+，如果确保 &lt;code>abs&lt;/code> 入参肯定是 &lt;code>double&lt;/code>，则只需要取出 &lt;code>Double::doubleToRawLongBits&lt;/code>&lt;/p>
 &lt;div class="highlight">&lt;div class="chroma">
 &lt;table class="lntable">&lt;tr>&lt;td class="lntd">
 &lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
@@ -295,10 +1087,10 @@ loading="lazy"
 &lt;/span>&lt;/code>&lt;/pre>&lt;/td>
 &lt;td class="lntd">
 &lt;pre tabindex="0" class="chroma">&lt;code class="language-Java" data-lang="Java">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kd">static&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kt">long&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">doubleToLongBits&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kt">double&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">    &lt;/span>&lt;span class="k">if&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">!&lt;/span>&lt;span class="n">isNaN&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="p">))&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">        &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">doubleToRawLongBits&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">   &lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">    &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">0x7ff8000000000000L&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">if&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">!&lt;/span>&lt;span class="n">isNaN&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="p">))&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">doubleToRawLongBits&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">0x7ff8000000000000L&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
 &lt;/div>
@@ -316,18 +1108,20 @@ loading="lazy"
 &lt;/span>&lt;span class="lnt">9
 &lt;/span>&lt;/code>&lt;/pre>&lt;/td>
 &lt;td class="lntd">
-&lt;pre tabindex="0" class="chroma">&lt;code class="language-Java" data-lang="Java">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">private&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kd">static&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kd">final&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kt">long&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">MINUS_ZERO_LONG_BITS&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">Double&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">doubleToRawLongBits&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">0&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-Java" data-lang="Java">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">private&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kd">static&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kd">final&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kt">long&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">MINUS_ZERO_LONG_BITS&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">Double&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">doubleToRawLongBits&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">0&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kd">static&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kt">double&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">abs&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kt">double&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">  &lt;/span>&lt;span class="k">if&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">&amp;lt;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">||&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">      &lt;/span>&lt;span class="n">Double&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">doubleToRawLongBits&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">MINUS_ZERO_LONG_BITS&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">    &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">if&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">&amp;lt;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">||&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">Double&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">doubleToRawLongBits&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">MINUS_ZERO_LONG_BITS&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">  &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
 &lt;/div>
-&lt;/div>&lt;p>到 &lt;code>JDK8&lt;/code> 就结束了，而 &lt;code>JDK9&lt;/code> 开始引入 &lt;code>@HotSpotIntrinsicCandidate&lt;/code> 注解，即 &lt;code>HotSpot JVM&lt;/code> 内部的 &lt;code>JIT compiler&lt;/code> 会移除 &lt;code>JDK&lt;/code> 中的实现方法，采用 &lt;code>CPU&lt;/code> 指令直接实现，这会比高级语言转汇编转机器语言要快很多，毕竟 CPU 并不会在乎数据类型的问题，只需要重新解释(reinterpreting) 储存在 CPU 寄存器的一组位的问题，以便于与 Java 数据类型一致。&lt;/p>
+&lt;/div>&lt;p>到 &lt;code>JDK8&lt;/code> 就结束了，而 &lt;code>JDK9&lt;/code> 开始引入 &lt;code>@HotSpotIntrinsicCandidate&lt;/code> 注解，即 &lt;code>HotSpot JVM&lt;/code> 内部的 &lt;code>JIT compiler&lt;/code>
+会移除 &lt;code>JDK&lt;/code> 中的实现方法，采用 &lt;code>CPU&lt;/code> 指令直接实现，这会比高级语言转汇编转机器语言要快很多，毕竟 CPU
+并不会在乎数据类型的问题，只需要重新解释(reinterpreting) 储存在 CPU 寄存器的一组位的问题，以便于与 Java 数据类型一致。&lt;/p>
 &lt;div class="highlight">&lt;div class="chroma">
 &lt;table class="lntable">&lt;tr>&lt;td class="lntd">
 &lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
@@ -346,8 +1140,8 @@ loading="lazy"
 &lt;/span>&lt;span class="lnt">2
 &lt;/span>&lt;/code>&lt;/pre>&lt;/td>
 &lt;td class="lntd">
-&lt;pre tabindex="0" class="chroma">&lt;code class="language-Java" data-lang="Java">&lt;span class="line">&lt;span class="cl">&lt;span class="n">System&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">out&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">0&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">0&lt;/span>&lt;span class="p">));&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="c1">// 0.0&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="n">System&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">out&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">0&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">0&lt;/span>&lt;span class="p">));&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="c1">// 0.0&lt;/span>&lt;span class="w">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-Java" data-lang="Java">&lt;span class="line">&lt;span class="cl">&lt;span class="n">System&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">out&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">0&lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">0&lt;/span>&lt;span class="p">));&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="c1">// 0.0&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="n">System&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">out&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">0&lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">0&lt;/span>&lt;span class="p">));&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="c1">// 0.0&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
 &lt;/div>
 &lt;/div>&lt;p>&lt;strong>对方法进行改写&lt;/strong>&lt;/p>
@@ -365,13 +1159,13 @@ loading="lazy"
 &lt;/span>&lt;/code>&lt;/pre>&lt;/td>
 &lt;td class="lntd">
 &lt;pre tabindex="0" class="chroma">&lt;code class="language-Java" data-lang="Java">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kd">static&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kt">double&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">abs&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kt">double&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">  &lt;/span>&lt;span class="k">if&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">    &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">0&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">if&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">0&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">  &lt;/span>&lt;span class="k">if&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">&amp;lt;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">    &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">if&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">&amp;lt;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">  &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
 &lt;/div>
@@ -387,10 +1181,10 @@ loading="lazy"
 &lt;/span>&lt;/code>&lt;/pre>&lt;/td>
 &lt;td class="lntd">
 &lt;pre tabindex="0" class="chroma">&lt;code class="language-Java" data-lang="Java">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kd">static&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kt">double&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">abs&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kt">double&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">  &lt;/span>&lt;span class="k">if&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">&amp;lt;=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">    &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">0&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">if&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">&amp;lt;=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">0&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">  &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
 &lt;/div>
@@ -403,12 +1197,13 @@ loading="lazy"
 &lt;/span>&lt;/code>&lt;/pre>&lt;/td>
 &lt;td class="lntd">
 &lt;pre tabindex="0" class="chroma">&lt;code class="language-Java" data-lang="Java">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kd">static&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kt">double&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">abs&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kt">double&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">a&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">    &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">a&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">&amp;lt;=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">0&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">?&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">0&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">a&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">a&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">a&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">&amp;lt;=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">0&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">?&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">0&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">0&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">a&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">a&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
 &lt;/div>
 &lt;/div>&lt;p>会发现，JDK &lt;code>Math::abs(double,double)&lt;/code> 实现相同（逃&lt;/p>
-&lt;p>&lt;strong>遵循&lt;/strong> &lt;code>IEEE-754&lt;/code> 的双精度浮点数二进制表达形式，只需要将二进制在高位符号位改成 0 即可实现转正数(abs)，需要掩码 &lt;code>0x7fffffffffffffffL&lt;/code> == 63位 1 bit&lt;/p>
+&lt;p>&lt;strong>遵循&lt;/strong> &lt;code>IEEE-754&lt;/code> 的双精度浮点数二进制表达形式，只需要将二进制在高位符号位改成 0 即可实现转正数(abs)
+，需要掩码 &lt;code>0x7fffffffffffffffL&lt;/code> == 63位 1 bit&lt;/p>
 &lt;div class="highlight">&lt;div class="chroma">
 &lt;table class="lntable">&lt;tr>&lt;td class="lntd">
 &lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
@@ -427,13 +1222,15 @@ loading="lazy"
 &lt;/span>&lt;/code>&lt;/pre>&lt;/td>
 &lt;td class="lntd">
 &lt;pre tabindex="0" class="chroma">&lt;code class="language-Java" data-lang="Java">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kd">static&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kt">double&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">abs&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kt">double&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">  &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">Double&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">longBitsToDouble&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">    &lt;/span>&lt;span class="n">Double&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">doubleToRawLongBits&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">0x7fffffffffffffffL&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">Double&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">longBitsToDouble&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">Double&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">doubleToRawLongBits&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">value&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">0x7fffffffffffffffL&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
 &lt;/div>
-&lt;/div>&lt;p>&lt;strong>📌此版本不存在分支，在某些条件下的吞吐量增加&lt;/strong> &lt;strong>10%&lt;/strong>，单分支实现在 Java 标准库存在多年，在随即到来的 JDK 18 中，改进版本已经提交「From: 2021/9/18」&lt;/p>
-&lt;p>然而在许多情况下，这些改进并没有太大意义，因为 JIT 编译器会适当使用汇编指令(if available) 会完全替代 Java code，所以这种改动并 &lt;strong>不能&lt;/strong> 使程序显著性提升很多（逃&lt;/p>
+&lt;/div>&lt;p>&lt;strong>📌此版本不存在分支，在某些条件下的吞吐量增加&lt;/strong> &lt;strong>10%&lt;/strong>，单分支实现在 Java 标准库存在多年，在随即到来的 JDK 18
+中，改进版本已经提交「From: 2021/9/18」&lt;/p>
+&lt;p>然而在许多情况下，这些改进并没有太大意义，因为 JIT 编译器会适当使用汇编指令(if available) 会完全替代 Java code，所以这种改动并
+&lt;strong>不能&lt;/strong> 使程序显著性提升很多（逃&lt;/p>
 &lt;h2 id="reference">🔗Reference
 &lt;/h2>&lt;blockquote>
 &lt;p>&lt;a class="link" href="https://habr.com/en/post/574082/" target="_blank" rel="noopener"
@@ -442,7 +1239,41 @@ loading="lazy"
 >OpenJDK Double::compare&lt;/a>&lt;/p>
 &lt;p>&lt;a class="link" href="https://docs.oracle.com/javase/8/docs/api/java/lang/Double.html#doubleToLongBits-double-" target="_blank" rel="noopener"
 >JavaSE 8 doubleToLongBits&lt;/a>&lt;/p>
-&lt;/blockquote></description></item><item><title>Java For-loop For-each Iterator 效率分析</title><link>https://capriwits.com/post/java-for_loop_for_each_iterator-efficiency-analysis/</link><pubDate>Tue, 16 Mar 2021 10:37:29 +0800</pubDate><guid>https://capriwits.com/post/java-for_loop_for_each_iterator-efficiency-analysis/</guid><description>&lt;img src="https://capriwits.com/post/java-for_loop_for_each_iterator-efficiency-analysis/java-programming-cover.png" alt="Featured image of post Java For-loop For-each Iterator 效率分析" />&lt;h1 id="java-for-loop-for-each-iterator-效率分析">Java For-loop For-each Iterator 效率分析
+&lt;/blockquote></description></item><item><title>Java For-loop For-each Iterator 效率分析</title><link>https://capriwits.com/post/java-for_loop_for_each_iterator-efficiency-analysis/</link><pubDate>Tue, 16 Mar 2021 10:37:29 +0800</pubDate><guid>https://capriwits.com/post/java-for_loop_for_each_iterator-efficiency-analysis/</guid><description>&lt;img src="https://capriwits.com/post/java-for_loop_for_each_iterator-efficiency-analysis/java-programming-cover.png" alt="Featured image of post Java For-loop For-each Iterator 效率分析" />&lt;!-- TOC -->
+&lt;ul>
+&lt;li>&lt;a class="link" href="#java-for-loop-for-each-iterator-%e6%95%88%e7%8e%87%e5%88%86%e6%9e%90" >Java For-loop For-each Iterator 效率分析&lt;/a>
+&lt;ul>
+&lt;li>&lt;a class="link" href="#systemnanotime-%e8%ae%a1%e6%97%b6%e6%b5%8b%e8%af%95" >System.nanoTime 计时测试&lt;/a>
+&lt;ul>
+&lt;li>&lt;a class="link" href="#%e6%95%b0%e9%87%8f%e7%ba%a71000" >数量级：1,000&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#%e6%95%b0%e9%87%8f%e7%ba%a710000" >数量级：10,000&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#%e6%95%b0%e9%87%8f%e7%ba%a7100000" >数量级：100,000&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;a class="link" href="#jmh-benchmark-%e5%9f%ba%e5%87%86%e6%b5%8b%e8%af%95" >JMH BenchMark 基准测试&lt;/a>
+&lt;ul>
+&lt;li>&lt;a class="link" href="#%e5%9f%ba%e5%87%86%e6%b5%8b%e8%af%95%e7%bb%93%e6%9e%9c%e5%88%86%e6%9e%90" >基准测试结果分析&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;a class="link" href="#%e4%b8%89%e7%a7%8d%e5%be%aa%e7%8e%af%e7%9a%84%e4%bd%bf%e7%94%a8%e5%bb%ba%e8%ae%ae" >三种循环的使用建议&lt;/a>
+&lt;ul>
+&lt;li>&lt;a class="link" href="#for-each-%e4%bc%98%e5%8a%bf%e4%ba%8e-while-loop" >For-each 优势于 While-loop&lt;/a>
+&lt;ul>
+&lt;li>&lt;a class="link" href="#%e9%a2%84%e9%98%b2bug" >预防Bug&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#%e4%b8%ba%e4%bb%80%e4%b9%88%e8%a6%81%e5%b0%86%e5%b1%80%e9%83%a8%e5%8f%98%e9%87%8f%e7%9a%84%e4%bd%9c%e7%94%a8%e5%9f%9f%e6%9c%80%e5%b0%8f%e5%8c%96" >为什么要“将局部变量的作用域最小化”&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;a class="link" href="#for-each-%e4%bc%98%e5%8a%bf%e4%ba%8e-for-loop" >For-each 优势于 For-loop&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#for-each-%e6%97%a0%e6%b3%95%e4%bd%bf%e7%94%a8%e7%9a%84%e5%9c%b0%e6%96%b9" >For-each 无法使用的地方&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#for-each-%e6%8b%93%e5%b1%95%e4%bd%bf%e7%94%a8" >For-each 拓展使用&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;a class="link" href="#%e6%80%bb%e7%bb%93" >总结&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;!-- TOC -->
+&lt;h1 id="java-for-loop-for-each-iterator-效率分析">Java For-loop For-each Iterator 效率分析
 &lt;/h1>&lt;p>&lt;img src="https://img.shields.io/badge/JDK-21-red"
 loading="lazy"
 alt="JDK21"
@@ -1129,7 +1960,18 @@ SIX SIX&lt;/p>
 &lt;/div>
 &lt;/div>&lt;h2 id="总结">总结
 &lt;/h2>&lt;p>总而言之，与传统的 for 循环相比，for-each 循环在简洁性、灵活性以及出错预防性方面都占有绝对优势，并且&lt;strong>没有性能惩罚&lt;/strong>的问题。&lt;br>
-因此，当可以选择的时候，&lt;code>for-each&lt;/code> 循环应该优先于 for 循环。&lt;/p></description></item><item><title>Iterator remove 时出现 ConcurrentModificationException</title><link>https://capriwits.com/post/iterator-concurrentmodificationexception-problem-when-remove/</link><pubDate>Mon, 15 Mar 2021 20:10:31 +0800</pubDate><guid>https://capriwits.com/post/iterator-concurrentmodificationexception-problem-when-remove/</guid><description>&lt;img src="https://capriwits.com/post/iterator-concurrentmodificationexception-problem-when-remove/java-programming-cover.png" alt="Featured image of post Iterator remove 时出现 ConcurrentModificationException" />&lt;h1 id="iterator-remove-时出现-concurrentmodificationexception">Iterator remove 时出现 ConcurrentModificationException
+因此，当可以选择的时候，&lt;code>for-each&lt;/code> 循环应该优先于 for 循环。&lt;/p></description></item><item><title>Iterator remove 时出现 ConcurrentModificationException</title><link>https://capriwits.com/post/iterator-concurrentmodificationexception-problem-when-remove/</link><pubDate>Mon, 15 Mar 2021 20:10:31 +0800</pubDate><guid>https://capriwits.com/post/iterator-concurrentmodificationexception-problem-when-remove/</guid><description>&lt;img src="https://capriwits.com/post/iterator-concurrentmodificationexception-problem-when-remove/java-programming-cover.png" alt="Featured image of post Iterator remove 时出现 ConcurrentModificationException" />&lt;!-- TOC -->
+&lt;ul>
+&lt;li>&lt;a class="link" href="#iterator-remove-%e6%97%b6%e5%87%ba%e7%8e%b0-concurrentmodificationexception" >Iterator remove 时出现 ConcurrentModificationException&lt;/a>
+&lt;ul>
+&lt;li>&lt;a class="link" href="#%e5%89%8d%e8%a8%80" >前言&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#%e5%88%86%e6%9e%90" >分析&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#%e5%bb%ba%e8%ae%ae%e7%94%a8%e6%b3%95" >建议用法&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;!-- TOC -->
+&lt;h1 id="iterator-remove-时出现-concurrentmodificationexception">Iterator remove 时出现 ConcurrentModificationException
 &lt;/h1>&lt;p>&lt;img src="https://img.shields.io/badge/JDK-1.8-red"
 loading="lazy"
 >&lt;/p>

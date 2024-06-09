@@ -1,0 +1,432 @@
+<!doctype html><html lang=zh-cn dir=ltr><head><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><meta name=description content="HTTPS 单双向认证及证书相关 一些常识 CA 证书和私钥 服务端和客户端SSL证书 证书格式 证书请求 证书链 HTTPS 单向认证（SSL/TLS) HTTPS 双向认证（mTLS） 自"><title>HTTPS 单双向认证及证书相关</title>
+<link rel=canonical href=https://capriwits.com/post/https-tls-and-mtls-and-certificate-related/><link rel=stylesheet href=/scss/style.min.0304c6baf04e01a8fe70693791cb744d56a3578a3120a8796cefc66825aa39c7.css><meta property='og:title' content="HTTPS 单双向认证及证书相关"><meta property='og:description' content="HTTPS 单双向认证及证书相关 一些常识 CA 证书和私钥 服务端和客户端SSL证书 证书格式 证书请求 证书链 HTTPS 单向认证（SSL/TLS) HTTPS 双向认证（mTLS） 自"><meta property='og:url' content='https://capriwits.com/post/https-tls-and-mtls-and-certificate-related/'><meta property='og:site_name' content="Capriwits's site"><meta property='og:type' content='article'><meta property='article:section' content='Post'><meta property='article:tag' content='Network'><meta property='article:tag' content='Cryptography'><meta property='article:published_time' content='2024-06-09T16:47:46+08:00'><meta property='article:modified_time' content='2024-06-09T16:47:46+08:00'><meta property='og:image' content='https://capriwits.com/post/https-tls-and-mtls-and-certificate-related/mtls-cover.png'><meta name=twitter:title content="HTTPS 单双向认证及证书相关"><meta name=twitter:description content="HTTPS 单双向认证及证书相关 一些常识 CA 证书和私钥 服务端和客户端SSL证书 证书格式 证书请求 证书链 HTTPS 单向认证（SSL/TLS) HTTPS 双向认证（mTLS） 自"><meta name=twitter:card content="summary_large_image"><meta name=twitter:image content='https://capriwits.com/post/https-tls-and-mtls-and-certificate-related/mtls-cover.png'></head><body class=article-page><script>(function(){const e="StackColorScheme";localStorage.getItem(e)||localStorage.setItem(e,"auto")})()</script><script>(function(){const t="StackColorScheme",e=localStorage.getItem(t),n=window.matchMedia("(prefers-color-scheme: dark)").matches===!0;e=="dark"||e==="auto"&&n?document.documentElement.dataset.scheme="dark":document.documentElement.dataset.scheme="light"})()</script><div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky"><button class="hamburger hamburger--spin" type=button id=toggle-menu aria-label=切换菜单>
+<span class=hamburger-box><span class=hamburger-inner></span></span></button><header><figure class=site-avatar><a href=/><img src=/img/avatar_hu404a7cf420dd49b156fcb4b9dd5d4fc0_35752_300x0_resize_q75_box.jpg width=300 height=300 class=site-logo loading=lazy alt=Avatar>
+</a><span class=emoji>🌹</span></figure><div class=site-meta><h1 class=site-name><a href=/>Capriwits's site</a></h1><h2 class=site-description>To see the world as it is and to love it.</h2></div></header><ol class=menu-social><li><a href=https://github.com/CapriWits target=_blank title=GitHub rel=me><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-github" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6.0 00-1.3-3.2 4.2 4.2.0 00-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3.0 00-6.2.0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2.0 00-.1 3.2A4.6 4.6.0 004 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/></svg></a></li><li><a href=mailto://hypocrite30@foxmail.com target=_blank title=Mail rel=me><!doctype html><svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="212.795" height="220.59" viewBox="0 0 212.795 220.59" enable-background="new 0 0 212.795 220.59"><path fill="#f7b63e" d="M206.382 36.693v138.896c0 2.718-2.207 4.924-4.926 4.924H11.338c-2.719.0-4.925-2.206-4.925-4.924V36.693l73.042 69.448 26.943 25.612 26.941-25.612 73.043-69.448z"/><path fill="#10003b" d="M201.456 182.514H11.338c-3.819.0-6.925-3.106-6.925-6.925V36.694c0-.8.477-1.523 1.211-1.838.736-.315 1.588-.163 2.167.389l98.606 93.749 98.606-93.749c.579-.552 1.432-.704 2.167-.389.734.315 1.211 1.038 1.211 1.838v138.895C208.382 179.408 205.275 182.514 201.456 182.514M8.413 41.354v134.234c0 1.613 1.312 2.925 2.925 2.925h190.118c1.613.0 2.926-1.312 2.926-2.925V41.354l-96.606 91.848c-.771.734-1.984.734-2.756.0L8.413 41.354z"/><path fill="#ffd161" d="M206.382 36.693l-73.043 69.448-26.941 25.612-26.943-25.612L6.413 36.693c0-2.719 2.206-4.925 4.925-4.925h190.118C204.175 31.769 206.382 33.975 206.382 36.693"/><path fill="#10003b" d="M106.398 133.753c-.496.0-.993-.184-1.378-.551L5.035 38.143c-.397-.377-.622-.901-.622-1.449.0-3.818 3.107-6.925 6.925-6.925h190.118c3.82.0 6.926 3.107 6.926 6.925.0.548-.225 1.072-.622 1.449l-99.984 95.06C107.39 133.569 106.894 133.753 106.398 133.753M8.514 35.931l97.884 93.063 97.883-93.063c-.337-1.244-1.476-2.162-2.825-2.162H11.338C9.988 33.769 8.85 34.687 8.514 35.931M206.382 36.693h.01H206.382z"/><path fill="#f7b63e" d="M206.382 175.589c0 2.719-2.207 4.925-4.926 4.925H11.338c-2.719.0-4.925-2.206-4.925-4.925l73.042-69.447 26.943 25.611 26.941-25.611 73.043 69.447z"/><path fill="#10003b" d="M201.456 182.514H11.338c-3.818.0-6.925-3.106-6.925-6.925.0-.548.225-1.072.622-1.449l73.042-69.447c.772-.735 1.985-.735 2.756.0l25.565 24.301 25.563-24.301c.771-.735 1.984-.735 2.756.0l73.043 69.447c.398.377.622.901.622 1.449C208.382 179.408 205.275 182.514 201.456 182.514M8.514 176.352c.336 1.244 1.475 2.162 2.824 2.162h190.118c1.35.0 2.489-.918 2.826-2.162l-70.943-67.45-25.563 24.301c-.772.734-1.985.734-2.756.0l-25.565-24.301-70.941 67.45z"/><polygon fill="#ffd161" points="79.456,106.141 6.416,175.593 6.416,36.69"/><path fill="#10003b" d="M6.416 177.593c-.267.0-.534-.053-.788-.162-.735-.315-1.212-1.038-1.212-1.838V36.69c0-.8.477-1.523 1.211-1.838.736-.315 1.588-.162 2.167.389l73.04 69.451c.397.377.622.901.622 1.449s-.225 1.072-.622 1.449l-73.04 69.452C7.415 177.403 6.919 177.593 6.416 177.593m2-136.242v129.581l68.138-64.791L8.416 41.351z"/><path fill="#10003b" d="M152.941 47.313h-62.06c-1.104.0-2-.896-2-2s.896-2 2-2h62.06c1.104.0 2 .896 2 2 0 1.105-.89500000000001 2-2 2"/><path fill="#10003b" d="M80.293 47.313h-20.44c-1.105.0-2-.896-2-2s.895-2 2-2h20.44c1.104.0 2 .896 2 2 0 1.105-.896000000000001 2-2 2"/><path fill="#10003b" d="M19.219 129.813c-1.104.0-2-.896-2-2V91.12c0-1.105.896-2 2-2s2 .895 2 2v36.693C21.219 128.917 20.323 129.813 19.219 129.813"/></svg></a></li><li><a href=https://twitter.com/noctambulist30 target=_blank title=Twitter rel=me><svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512" style="enable-background:new 0 0 512 512"><style>.st0{fill:#0cf}.st1{fill-rule:evenodd;clip-rule:evenodd;fill:#fff}</style><g><g><g><path class="st0" d="M503.6277 98.9293c-15.8539 7.1724-33.3008 11.5266-50.4099 14.3986 8.1227-1.3628 20.0931-16.0676 24.8777-22.0133 7.3009-9.0701 13.3735-19.4058 16.7879-30.5663.4348-.8711.7665-1.9664-.1046-2.6269-1.0953-.4348-1.8006-.2122-2.6717.2241-19.0965 10.2326-38.8504 17.6575-59.8715 22.9113-1.7423.4363-3.0348.0-4.1301-1.0938-1.7408-1.9679-3.3785-3.8208-5.2328-5.3524-8.8355-7.5176-18.3165-13.4154-29.0048-17.7711-14.0355-5.7215-29.3694-8.1451-44.4853-7.1649-14.7064.9548-29.1497 5.1014-42.2035 11.9211-13.0806 6.8347-24.7522 16.3411-34.0464 27.8109-9.614 11.8628-16.7042 25.8744-20.3337 40.7227-3.504 14.3313-3.2171 28.5087-1.0788 42.997.3242 2.4013.1136 2.7255-2.0636 2.4013C167.4175 163.4898 99.2485 134.0606 43.912 71.0033c-2.4027-2.7375-3.7072-2.7375-5.6752.2107-24.2158 36.2953-12.4665 94.6127 17.7845 123.2694 4.0315 3.8208 8.1765 7.6416 12.6443 11.1262-1.6302.3347-21.7622-1.8454-39.7007-11.1262-2.4027-1.5182-3.6086-.647-3.8208 2.0785-.2226 3.9209.1121 7.5295.65 11.7851 4.6471 36.7928 30.1285 70.8273 65.0222 84.1052 4.145 1.7423 8.7249 3.2724 13.1942 4.0315-7.9524 1.7423-16.1409 2.99-38.9416 1.2058-2.8376-.5454-3.9209.8727-2.8376 3.5981 17.1345 46.6997 54.1186 60.5932 81.816 68.5098 3.7072.6485 7.4174.6485 11.1351 1.5197-.2227.3347-.4453.3347-.6575.6589-9.1881 14.0056-41.041 24.4295-55.8729 29.613-26.9756 9.4272-56.3481 13.6694-84.8568 10.8587-4.5634-.6694-5.5212-.6201-6.7585.0-1.2522.774-.1584 1.8633 1.306 3.0497 5.7872 3.8193 11.6746 7.2053 17.674 10.4792 18.1073 9.5946 36.9841 17.2346 56.7231 22.6872 101.939 28.1516 216.7675 7.4653 293.3088-68.583 60.1076-59.7206 81.1735-142.0775 81.1735-224.539.0-3.2276 3.8133-5.0102 6.0801-6.7122 15.6388-11.7508 28.068-25.8116 39.7336-41.5132 2.6209-3.5279 2.4595-6.6643 2.4595-7.9524.0-.2226.0-.4348.0-.4348C505.4955 97.6114 505.6569 98.0074 503.6277 98.9293z"/></g><g><path class="st1" d="M154.6851 458.9174c42.2722.0 2.0291.0.0.0 5.56299999999999.0-.224199999999996.0.0.0z"/></g><g><path class="st1" d="M154.6851 458.9174c-.656000000000006.0508000000000379-8.2363.0.0.0.0.0-1.31950000000001.0.0.0z"/></g><g><path class="st1" d="M171.4849 459.3537c0-.841200000000015 8.84139999999999.0.0.0.0-.436300000000017 1.0848.0.0.0z"/></g><g><path class="st1" d="M347.9839 50.2692c-.5484.4348-1.3075.4348-2.0651.0C346.6764 50.2692 347.4355 50.2692 347.9839 50.2692z"/></g></g></g></svg></a></li><li><a href=https://t.me/capriwits target=_blank title=Telegram rel=me><svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid"><title>Telegram</title><defs><linearGradient x1="50%" y1="277555756e-23%" x2="50%" y2="100%" id="telegramLinearGradient-1"><stop stop-color="#2aabee" offset="0"/><stop stop-color="#229ed9" offset="100%"/></linearGradient></defs><g><path d="M128 0C94.06.0 61.48 13.494 37.5 37.49 13.5 61.486.0 94.066.0 128s13.5 66.514 37.5 90.51C61.48 242.506 94.06 256 128 256s66.52-13.494 90.5-37.49c24-23.996 37.5-56.576 37.5-90.51s-13.5-66.514-37.5-90.51C194.52 13.494 161.94.0 128 0z" fill="url(#telegramLinearGradient-1)"/><path d="M57.94 126.6476c37.32-16.256 62.2-26.974 74.64-32.152 35.56-14.786 42.94-17.354 47.76-17.4408458C181.4 77.0376 183.76 77.2996 185.3 78.5456 186.58 79.5956 186.94 81.0156 187.12 82.0116 187.28 83.0076 187.5 85.2776 187.32 87.0496 185.4 107.2896 177.06 156.4056 172.82 179.0756 171.04 188.668 167.5 191.884 164.08 192.198 156.64 192.882 151 187.286 143.8 182.5676c-11.26-7.386-17.62-11.982-28.56-19.188C102.6 155.0516 110.8 150.4736 118 142.9936c1.88-1.958 34.64-31.748 35.26-34.45C153.34 108.2056 153.42 106.9456 152.66 106.2816 151.92 105.6156 150.82 105.8436 150.02 106.0236c-1.14000000000001.256-19.12 12.152-54 35.686C90.92 145.2176 86.3 146.9276 82.14 146.8376 77.58 146.7396 68.78 144.2536 62.24 142.1296 54.24 139.5236 47.86 138.1456 48.42 133.7196 48.7 131.4156 51.88 129.0576 57.94 126.6476z" fill="#fff"/></g></svg></a></li><li><a href=/index.xml target=_blank title=RSS rel=me><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-rss" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="5" cy="19" r="1"/><path d="M4 4a16 16 0 0116 16"/><path d="M4 11a9 9 0 019 9"/></svg></a></li></ol><ol class=menu id=main-menu><li><a href=/><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-home" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><polyline points="5 12 3 12 12 3 21 12 19 12"/><path d="M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/><path d="M9 21v-6a2 2 0 012-2h2a2 2 0 012 2v6"/></svg>
+<span>主页</span></a></li><li><a href=/about/><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-user" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="7" r="4"/><path d="M6 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/></svg>
+<span>关于</span></a></li><li><a href=/archives/><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-archive" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><rect x="3" y="4" width="18" height="4" rx="2"/><path d="M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+<span>归档</span></a></li><li><a href=/search/><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-search" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="10" cy="10" r="7"/><line x1="21" y1="21" x2="15" y2="15"/></svg>
+<span>搜索</span></a></li><li><a href=/link/><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-link" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><path d="M10 14a3.5 3.5.0 005 0l4-4a3.5 3.5.0 00-5-5l-.5.5"/><path d="M14 10a3.5 3.5.0 00-5 0l-4 4a3.5 3.5.0 005 5l.5-.5"/></svg>
+<span>友链</span></a></li><li class=menu-bottom-section><ol class=menu><li id=dark-mode-toggle><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="8" cy="12" r="2"/><rect x="2" y="6" width="20" height="12" rx="6"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="16" cy="12" r="2"/><rect x="2" y="6" width="20" height="12" rx="6"/></svg>
+<span>暗色模式</span></li></ol></li></ol></aside><aside class="sidebar right-sidebar sticky"><section class="widget archives"><div class=widget-icon><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><line x1="5" y1="9" x2="19" y2="9"/><line x1="5" y1="15" x2="19" y2="15"/><line x1="11" y1="4" x2="7" y2="20"/><line x1="17" y1="4" x2="13" y2="20"/></svg></div><h2 class="widget-title section-title">目录</h2><div class=widget--toc><nav id=TableOfContents><ol><li><a href=#一些常识>一些常识</a><ol><li><a href=#ca-证书和私钥>CA 证书和私钥</a></li><li><a href=#服务端和客户端ssl证书>服务端和客户端SSL证书</a></li><li><a href=#证书格式>证书格式</a></li><li><a href=#证书请求>证书请求</a></li><li><a href=#证书链>证书链</a></li></ol></li><li><a href=#https-单向认证ssltls>HTTPS 单向认证（SSL/TLS)</a></li><li><a href=#https-双向认证mtls>HTTPS 双向认证（mTLS）</a></li><li><a href=#自签名证书-mtls-实战>自签名证书 mTLS 实战</a><ol><li><a href=#自签名根证书-ca>自签名根证书 CA</a></li><li><a href=#自签名服务端证书>自签名服务端证书</a></li><li><a href=#自签名客户端证书>自签名客户端证书</a></li><li><a href=#验证>验证</a><ol><li><a href=#带证书的成功调用>带证书的成功调用</a></li><li><a href=#不带证书的调用>不带证书的调用</a></li></ol></li></ol></li><li><a href=#reference>Reference</a></li></ol></nav></div></section></aside><main class="main full-width"><article class="has-image main-article"><header class=article-header><div class=article-image><a href=/post/https-tls-and-mtls-and-certificate-related/><img src=/post/https-tls-and-mtls-and-certificate-related/mtls-cover_hu5ea97cf0b56c46c093e1d5cc353e6933_30783_800x0_resize_box_3.png srcset="/post/https-tls-and-mtls-and-certificate-related/mtls-cover_hu5ea97cf0b56c46c093e1d5cc353e6933_30783_800x0_resize_box_3.png 800w, /post/https-tls-and-mtls-and-certificate-related/mtls-cover_hu5ea97cf0b56c46c093e1d5cc353e6933_30783_1600x0_resize_box_3.png 1600w" width=800 height=342 loading=lazy alt="Featured image of post HTTPS 单双向认证及证书相关"></a></div><div class=article-details><header class=article-category><a href=/categories/backend/>Backend</a></header><div class=article-title-wrapper><h2 class=article-title><a href=/post/https-tls-and-mtls-and-certificate-related/>HTTPS 单双向认证及证书相关</a></h2></div><footer class=article-time><div><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><path d="M11.795 21H5a2 2 0 01-2-2V7a2 2 0 012-2h12a2 2 0 012 2v4"/><circle cx="18" cy="18" r="4"/><path d="M15 3v4"/><path d="M7 3v4"/><path d="M3 11h16"/><path d="M18 16.496V18l1 1"/></svg>
+<time class=article-time--published>Jun 09, 2024</time></div><div><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+<time class=article-time--reading>阅读时长: 15 分钟</time></div></footer></div></header><section class=article-content><ul><li><a class=link href=#https-%e5%8d%95%e5%8f%8c%e5%90%91%e8%ae%a4%e8%af%81%e5%8f%8a%e8%af%81%e4%b9%a6%e7%9b%b8%e5%85%b3>HTTPS 单双向认证及证书相关</a><ul><li><a class=link href=#%e4%b8%80%e4%ba%9b%e5%b8%b8%e8%af%86>一些常识</a><ul><li><a class=link href=#ca-%e8%af%81%e4%b9%a6%e5%92%8c%e7%a7%81%e9%92%a5>CA 证书和私钥</a></li><li><a class=link href=#%e6%9c%8d%e5%8a%a1%e7%ab%af%e5%92%8c%e5%ae%a2%e6%88%b7%e7%ab%afssl%e8%af%81%e4%b9%a6>服务端和客户端SSL证书</a></li><li><a class=link href=#%e8%af%81%e4%b9%a6%e6%a0%bc%e5%bc%8f>证书格式</a></li><li><a class=link href=#%e8%af%81%e4%b9%a6%e8%af%b7%e6%b1%82>证书请求</a></li><li><a class=link href=#%e8%af%81%e4%b9%a6%e9%93%be>证书链</a></li></ul></li><li><a class=link href=#https-%e5%8d%95%e5%90%91%e8%ae%a4%e8%af%81ssltls>HTTPS 单向认证（SSL/TLS)</a></li><li><a class=link href=#https-%e5%8f%8c%e5%90%91%e8%ae%a4%e8%af%81mtls>HTTPS 双向认证（mTLS）</a></li><li><a class=link href=#%e8%87%aa%e7%ad%be%e5%90%8d%e8%af%81%e4%b9%a6-mtls-%e5%ae%9e%e6%88%98>自签名证书 mTLS 实战</a><ul><li><a class=link href=#%e8%87%aa%e7%ad%be%e5%90%8d%e6%a0%b9%e8%af%81%e4%b9%a6-ca>自签名根证书 CA</a></li><li><a class=link href=#%e8%87%aa%e7%ad%be%e5%90%8d%e6%9c%8d%e5%8a%a1%e7%ab%af%e8%af%81%e4%b9%a6>自签名服务端证书</a></li><li><a class=link href=#%e8%87%aa%e7%ad%be%e5%90%8d%e5%ae%a2%e6%88%b7%e7%ab%af%e8%af%81%e4%b9%a6>自签名客户端证书</a></li><li><a class=link href=#%e9%aa%8c%e8%af%81>验证</a><ul><li><a class=link href=#%e5%b8%a6%e8%af%81%e4%b9%a6%e7%9a%84%e6%88%90%e5%8a%9f%e8%b0%83%e7%94%a8>带证书的成功调用</a></li><li><a class=link href=#%e4%b8%8d%e5%b8%a6%e8%af%81%e4%b9%a6%e7%9a%84%e8%b0%83%e7%94%a8>不带证书的调用</a></li></ul></li></ul></li><li><a class=link href=#reference>Reference</a></li></ul></li></ul><h1 id=https-单双向认证及证书相关>HTTPS 单双向认证及证书相关</h1><h2 id=一些常识>一些常识</h2><h3 id=ca-证书和私钥>CA 证书和私钥</h3><ul><li><strong>CA（Certificate Authority）证书</strong>：由权威认证机构（CA）签发的数字证书，用于证明证书持有者的身份。CA证书可以自签名，也可以由更上级的CA签名。根CA证书通常是自签名的，用 root.key 签名一个 root.crt 根证书。CA 证书可能是一个根证书（root.crt），也可能是一个中间证书（子 CA 证书）。</li><li><strong>CA 私钥</strong>：用于签发和验证其他证书。CA私钥非常重要，必须妥善保管，确保不会泄露。</li><li>公钥是存储在证书里的，key 是私钥，用于签发证书</li></ul><p>常见 CA 机构，可以签发服务端 SSL 证书</p><ol><li>Let&rsquo;s Encrypt：Let&rsquo;s Encrypt 是一个免费的、自动化的证书颁发机构，致力于推动全球网站加密化。</li><li>DigiCert：DigiCert 是一家知名的商业证书颁发机构，提供各种 <code>SSL/TLS</code> 证书和数字证书解决方案。</li><li>Sectigo（原名Comodo）：Sectigo 是一家全球领先的数字证书颁发机构，提供 <code>SSL</code> 证书、代码签名证书等安全解决方案。</li><li>GlobalSign：GlobalSign 是一家全球性的数字证书颁发机构，提供 <code>SSL</code> 证书、代码签名证书、身份验证等服务。</li><li>GoDaddy：GoDaddy 是一家知名的域名注册商，也提供 <code>SSL</code> 证书和其他网络安全服务。</li><li>Entrust Datacard：Entrust Datacard 是一家提供数字证书、身份验证和加密解决方案的领先供应商。</li></ol><h3 id=服务端和客户端ssl证书>服务端和客户端SSL证书</h3><ul><li><strong>服务端SSL证书</strong>：安装在服务器上的数字证书，用于加密客户端和服务器之间的通信，确保数据的安全性和完整性。通常由 <code>CA</code> 签发，包含服务器的公钥信息。（<code>server.crt</code></li><li><strong>客户端SSL证书</strong>：安装在客户端上的数字证书，用于验证客户端的身份，通常在双向认证（mTLS）中使用。(<code>client.crt</code></li></ul><h3 id=证书格式>证书格式</h3><ul><li><code>X.509</code></li></ul><p><code>X.509</code> 格式证书是一种标准的公钥证书格式，<code>X.509</code> 证书的主要特点和组成部分包括：</p><ol><li>标准化格式：<code>X.509</code> 定义了一个结构化的证书格式，确保了不同系统之间能够互操作和理解。</li><li>公钥信息：证书包含了证书持有者的公钥，这是用于加密数据或验证数字签名的关键部分。</li><li>身份信息：证书还包括证书持有者的身份信息，如组织名称、组织单元、国家/地区等。这些信息帮助验证证书持有者的身份。</li><li>签名：证书由证书颁发机构（CA）进行数字签名，以确保其完整性和真实性。这意味着如果证书被篡改，签名将不再有效。</li><li>有效期：每个 <code>X.509</code> 证书都有一个有效的时间范围，由“开始日期”和“结束日期”定义。这确保了证书的时效性和定期更新需求。</li><li>证书链和信任：<code>X.509</code> 证书通常是证书链的一部分，其中每个证书都由上一级证书颁发机构签名，最终追溯到一个受信任的根证书。这种结构建立了信任链，使得终端用户可以验证证书的合法性。</li><li>扩展性：<code>X.509</code> 证书支持扩展字段，允许添加额外信息，如密钥用途、证书策略等，以满足不同应用场景的需求</li></ol><p><code>.crt</code> 后缀证书，可能是 <code>PEM</code> 编码，也可能是 <code>DER</code> 编码</p><ul><li><code>PEM</code> (Privacy Enhanced Mail)</li></ul><p><code>PEM</code> 是一种广泛使用的编码格式，特别是安全领域的数据，如证书、密钥等。<code>PEM</code> 格式使用 <code>Base64</code> 编码的 <code>ASCII</code> 文本表示，并带有 <code>"-----BEGIN CERTIFICATE-----"</code> 和 <code>"-----END CERTIFICATE-----"</code> 的边界标记。可以以 ASCII 的格式存储 <code>X.509</code> 格式的证书 crt。</p><p>证书可以存储<strong>公钥、私钥、证书、证书链、证书请求</strong></p><p>公钥：通常以 <code>“-----BEGIN PUBLIC KEY-----”</code> 和 <code>“-----END PUBLIC KEY-----”</code> 为边界</p><p>私钥：通常以 <code>“-----BEGIN PRIVATE KEY-----”</code> 和 <code>“-----END PRIVATE KEY-----”</code> 为边界，或者对于某些类型的私钥（如RSA私钥），可能是 <code>“-----BEGIN RSA PRIVATE KEY-----”</code> 和 <code>“-----END RSA PRIVATE KEY-----”</code></p><p>证书：包括服务器证书、中间证书等，通常以 <code>“-----BEGIN CERTIFICATE-----”</code> 和 <code>“-----END CERTIFICATE-----”</code> 为边界</p><p>证书请求（如CSR，Certificate Signing Request）：通常以 <code>“-----BEGIN CERTIFICATE REQUEST-----”</code> 和 <code>“-----END CERTIFICATE REQUEST-----”</code> 为边界。</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 查看 PEM 证书信息</span>
+</span></span><span class=line><span class=cl>openssl x509 -in certificate.pem -text -noout
+</span></span><span class=line><span class=cl><span class=c1># PEM 转 DER</span>
+</span></span><span class=line><span class=cl>openssl x509 -in cert.crt -outform der -out cert.der
+</span></span></code></pre></td></tr></table></div></div><ul><li><code>DER</code> (Distinguished Encoding Rules)</li></ul><p><code>X.509</code> 证书在二进制形式下通常使用 <code>DER</code> 格式。虽然 <code>DER</code> 本身不是证书格式，但它是 <code>X.509</code> 证书 <strong>二进制编码</strong> 的基础。存证书，没有私钥</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 查看 DER 证书信息</span>
+</span></span><span class=line><span class=cl>openssl x509 -in certificate.der -inform der -text -noout
+</span></span><span class=line><span class=cl><span class=c1># DER 转 PEM</span>
+</span></span><span class=line><span class=cl>openssl x509 -in cert.crt -inform der -outform pem -out cert.pem
+</span></span></code></pre></td></tr></table></div></div><ul><li><code>PFX/PKCS12</code>（Public-Key Cryptography Standards #12）</li></ul><p>常用于存储私钥和相关的公钥证书链，以 <code>.pfx</code> 或 <code>.p12</code> 为文件扩展名。这种格式可以转换为 <code>PEM</code> 格式，从而提取出私钥和证书。通常包含私钥、证书和证书链的组合</p><p>PKCS12 可以包含 <strong>公钥、私钥、证书和证书链</strong> ，并且有 <strong>密码保护</strong> ，一般便于不同平台传输，常用于客户端证书（<code>client.crt → client.p12</code></p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 查看 p12 证书信息</span>
+</span></span><span class=line><span class=cl>openssl pkcs12 -info -in your_certificate.p12
+</span></span><span class=line><span class=cl><span class=c1># p12 转 pem</span>
+</span></span><span class=line><span class=cl>openssl pkcs12 -in your_certificate.p12 -nocerts -out private_key.pem
+</span></span></code></pre></td></tr></table></div></div><ul><li><code>JKS</code>（Java KeyStore）</li></ul><p><code>JKS</code> 是 Java 中用于存储密钥和证书的专有格式，二进制格式。<code>JKS</code> 文件通常以 <code>.jks</code> 为文件扩展名。在 Java 应用程序中管理密钥和证书，包括私钥、证书、证书链等信息。<code>JKS</code> 文件通常需要密码来保护存储在其中的密钥和证书。</p><p>生成和转换需要用到 <code>Java keytool</code></p><h3 id=证书请求>证书请求</h3><p><code>CSR</code>（Certificate Signing Request）是一种包含有关组织或个人信息的加密文本，用于向证书颁发机构（CA）申请数字证书。<code>CSR</code>包含了将包含在数字证书中的 <strong>公钥</strong>，以及与该公钥相关联的组织信息，如组织名称、域名等。</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 先创建一个私钥 key</span>
+</span></span><span class=line><span class=cl>openssl genrsa -out root.key <span class=m>4096</span>
+</span></span><span class=line><span class=cl><span class=c1># 再根据 key 生成一个证书请求</span>
+</span></span><span class=line><span class=cl>openssl req -new -out root.csr -key root.key
+</span></span><span class=line><span class=cl><span class=c1># 下面是提示出来需要填写到 csr 的信息，包括国家、省、城市、公司、单位、域名、密码等信息</span>
+</span></span><span class=line><span class=cl>Country Name <span class=o>(</span><span class=m>2</span> letter code<span class=o>)</span> <span class=o>[</span>XX<span class=o>]</span>:cn
+</span></span><span class=line><span class=cl>State or Province Name <span class=o>(</span>full name<span class=o>)</span> <span class=o>[]</span>:bj
+</span></span><span class=line><span class=cl>Locality Name <span class=o>(</span>eg, city<span class=o>)</span> <span class=o>[</span>Default City<span class=o>]</span>:bj
+</span></span><span class=line><span class=cl>Organization Name <span class=o>(</span>eg, company<span class=o>)</span> <span class=o>[</span>Default Company Ltd<span class=o>]</span>:alibaba
+</span></span><span class=line><span class=cl>Organizational Unit Name <span class=o>(</span>eg, section<span class=o>)</span> <span class=o>[]</span>:test
+</span></span><span class=line><span class=cl>Common Name <span class=o>(</span>eg, your name or your servers hostname<span class=o>)</span> <span class=o>[]</span>:root
+</span></span><span class=line><span class=cl>Email Address <span class=o>[]</span>:a.alibaba.com
+</span></span><span class=line><span class=cl>A challenge password <span class=o>[]</span>:
+</span></span><span class=line><span class=cl>An optional company name <span class=o>[]</span>:
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 用 key 和 csr 生成 10 年期限的根证书 root.crt</span>
+</span></span><span class=line><span class=cl>openssl x509 -req -in root.csr -out root.crt -signkey root.key -CAcreateserial -days <span class=m>3650</span>
+</span></span></code></pre></td></tr></table></div></div><p>生成的 <code>root.csr</code> 证书请求，一方面包含公司信息，另一方面包含 key 对应的公钥。</p><p>用 key 和 csr 就可以签发一个证书 <code>root.crt</code>。假设公司信息不改变，key 也未泄露，由于公私钥是对应的，理论上等到 <code>root.crt</code> 过期后，可以再次签发一个 <code>root.crt</code>，达到续签的目的。</p><h3 id=证书链>证书链</h3><p>证书链是指从根证书（Root Certificate）开始，通过中间证书（Intermediate Certificate）逐级签发，直到最终的终端用户证书（End-Entity Certificate）</p><ul><li><strong>根证书（Root Certificate）</strong>：自签名的证书，位于证书链的最顶端。根证书由权威认证机构（CA）发行并保存在受信任的存储区中。</li><li><strong>中间证书（Intermediate Certificate）</strong>：由根证书或其他中间证书签发，形成证书链。中间证书用于签发更下级的证书。</li><li><strong>终端用户证书（End-Entity Certificate）</strong>：由根证书或中间证书签发，最终用于服务器或客户端。</li></ul><p><code>root.crt → intermediate1.crt → intermediate2.crt → server.crt</code></p><p>以上过程 <code>root.crt</code> 是根证书，以 <code>root.crt</code> 为 CA 签发中间证书 <code>intermediate1.crt</code>，再用 <code>intermediate1.crt</code> 为 CA 签发 <code>intermediate2.crt</code> 中间证书，最后 <code>intermediate2.crt</code> 签发终端用户证书 <code>server.crt</code></p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>openssl genrsa -out root.key <span class=m>4096</span>  <span class=c1># 根私钥</span>
+</span></span><span class=line><span class=cl><span class=c1># 根证书</span>
+</span></span><span class=line><span class=cl>openssl req -new -x509 -days <span class=m>3650</span> -key root.key -out root.crt -subj <span class=s2>&#34;/CN=Root CA&#34;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>openssl genrsa -out intermediate1.key <span class=m>4096</span> <span class=c1># 中间证书 1 私钥</span>
+</span></span><span class=line><span class=cl><span class=c1># 中间证书请求 1</span>
+</span></span><span class=line><span class=cl>openssl req -new -key intermediate1.key -out intermediate1.csr -subj <span class=s2>&#34;/CN=Intermediate CA 1&#34;</span>
+</span></span><span class=line><span class=cl><span class=c1># 根证书签发中间证书 1</span>
+</span></span><span class=line><span class=cl>openssl x509 -req -in intermediate1.csr -CA root.crt -CAkey root.key -CAcreateserial -out intermediate1.crt -days <span class=m>3650</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>openssl genrsa -out intermediate2.key <span class=m>4096</span> <span class=c1># 中间证书 2 私钥</span>
+</span></span><span class=line><span class=cl><span class=c1># 中间证书请求 2</span>
+</span></span><span class=line><span class=cl>openssl req -new -key intermediate2.key -out intermediate2.csr -subj <span class=s2>&#34;/CN=Intermediate CA 2&#34;</span>
+</span></span><span class=line><span class=cl><span class=c1># 中间证书 1 做 CA 签发中间证书 2</span>
+</span></span><span class=line><span class=cl>openssl x509 -req -in intermediate2.csr -CA intermediate1.crt -CAkey intermediate1.key -CAcreateserial -out intermediate2.crt -days <span class=m>3650</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>openssl genrsa -out server.key <span class=m>4096</span> <span class=c1># 终端用户证书私钥</span>
+</span></span><span class=line><span class=cl><span class=c1># 终端用户证书请求</span>
+</span></span><span class=line><span class=cl>openssl req -new -key server.key -out server.csr -subj <span class=s2>&#34;/CN=server.example.com&#34;</span>
+</span></span><span class=line><span class=cl><span class=c1># 中间证书 2 做 CA 签发终端用户证书</span>
+</span></span><span class=line><span class=cl>openssl x509 -req -in server.csr -CA intermediate2.crt -CAkey intermediate2.key -CAcreateserial -out server.crt -days <span class=m>365</span>
+</span></span></code></pre></td></tr></table></div></div><p><strong>根证书（root.crt）</strong>：通常保存在操作系统或浏览器的受信任证书存储中。作为信任链的根，客户端无需直接访问它。</p><p><strong>中间证书一（intermediate1.crt）和中间证书二（intermediate2.crt）</strong>：保存在服务器上，用于建立完整的证书链。客户端会通过服务器传递的证书链验证服务器证书的可信度。</p><p><strong>终端用户证书（server.crt）和私钥（server.key）</strong>：安装在服务器上，用于加密通信和验证服务器身份。</p><p><strong>完整的证书链文件</strong>：服务器需要提供一个包含所有中间证书的文件，以便客户端可以验证证书链。可以将中间证书和终端证书合并成一个文件。</p><p>一般来说，证书链的顺序是：<strong>SSL 证书 → 中间证书 → 根证书</strong>，依次向上游，一般客户端会默认信任根证书，可以省略</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>cat server.crt intermediate2.crt intermediate1.crt &gt; fullchain.crt
+</span></span></code></pre></td></tr></table></div></div><p><strong>服务器配置示例（以Nginx为例）</strong>：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>server <span class=o>{</span>
+</span></span><span class=line><span class=cl>    listen <span class=m>443</span> ssl<span class=p>;</span>
+</span></span><span class=line><span class=cl>    server_name example.com<span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    ssl_certificate /path/to/fullchain.crt<span class=p>;</span>
+</span></span><span class=line><span class=cl>    ssl_certificate_key /path/to/server.key<span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=o>}</span>
+</span></span></code></pre></td></tr></table></div></div><p><strong>客户端验证证书链</strong>：</p><ul><li>客户端验证终端用户证书是否由中间证书二签发。</li><li>客户端验证中间证书二是否由中间证书一签发。</li><li>客户端验证中间证书一是否由根证书签发。</li><li>客户端检查根证书是否在受信任的根证书列表中。</li></ul><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 验证中间证书一是否由根证书签发</span>
+</span></span><span class=line><span class=cl>openssl verify -CAfile root.crt intermediate1.crt <span class=c1># intermediate1.crt: OK</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 接下来，验证中间证书二是否由中间证书一签发。</span>
+</span></span><span class=line><span class=cl><span class=c1># 为了验证中间证书二，先创建一个证书链文件，包含根证书和中间证书一。</span>
+</span></span><span class=line><span class=cl>cat root.crt intermediate1.crt &gt; chain1.pem
+</span></span><span class=line><span class=cl>openssl verify -CAfile chain1.pem intermediate2.crt <span class=c1># intermediate2.crt: OK</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 最后，验证终端用户证书是否由中间证书二签发。</span>
+</span></span><span class=line><span class=cl><span class=c1># 创建一个证书链文件，包含根证书和所有中间证书。</span>
+</span></span><span class=line><span class=cl>cat root.crt intermediate1.crt intermediate2.crt &gt; chain2.pem
+</span></span><span class=line><span class=cl>openssl verify -CAfile chain2.pem server.crt <span class=c1># server.crt: OK</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 为了完整验证整个证书链，你可以使用以下命令验证整个证书链文件 fullchain.crt：</span>
+</span></span><span class=line><span class=cl>cat server.crt intermediate2.crt intermediate1.crt &gt; fullchain.crt
+</span></span><span class=line><span class=cl>openssl verify -CAfile root.crt fullchain.crt <span class=c1># fullchain.crt: OK</span>
+</span></span></code></pre></td></tr></table></div></div><h2 id=https-单向认证ssltls>HTTPS 单向认证（SSL/TLS)</h2><p><img src=/post/https-tls-and-mtls-and-certificate-related/TLS.png width=1702 height=1106 srcset="/post/https-tls-and-mtls-and-certificate-related/TLS_hu6f2165ae139fd7111b6816ac9bbdad28_252037_480x0_resize_box_3.png 480w, /post/https-tls-and-mtls-and-certificate-related/TLS_hu6f2165ae139fd7111b6816ac9bbdad28_252037_1024x0_resize_box_3.png 1024w" loading=lazy alt="TLS 单向认证" class=gallery-image data-flex-grow=153 data-flex-basis=369px></p><ol><li>客户端发起建立HTTPS连接请求，将SSL协议版本的信息发送给服务器端；</li><li>服务器端将本机的公钥证书（<code>server.crt</code>）发送给客户端；</li><li>客户端读取公钥证书（<code>server.crt</code>），取出了服务端公钥；</li><li>客户端生成一个随机数（密钥 <code>R</code>），用刚才得到的服务器公钥去加密这个随机数形成密文，发送给服务端；</li><li>服务端用自己的私钥（<code>server.key</code>）去解密这个密文，得到了密钥 <code>R</code></li><li>服务端和客户端在后续通讯过程中就使用这个密钥 <code>R</code> 进行通信了。</li></ol><p>服务端部署时，将 <code>server.crt</code> 和 <code>server.key</code> 上传至服务器即可。如果服务端用云服务 LoadBalancer，则将两个文件上传至 LB 绑定的地方，例如阿里云 CLB 界面有证书管理，AWS 有 ACM（AWS Certificate Manager）专门管理证书等；如果服务端用 K8S Ingress 配置 SSL，则将两个文件 base64 到 secret，再将 secret 配置到 ingress 实现 SSL 单向认证。如果用 Nginx，Apache 等服务器，则找到对应的方式上传证书即可。</p><p>key 私钥用于解密客户端公钥加密的数据，也可以在服务端生成签名。crt 证书配合客户端已经信任的 CA，验证服务端的身份（crt 带有服务端的信息，包括国家、城市、公司、域名、证书起始和过期时间等；</p><p>一般公网环境，客户端默认在本机都会安装操作系统时，默认信任一些 CA，例如微软系统 IIS 专门管理证书，浏览器自动读取，用户无感；</p><h2 id=https-双向认证mtls>HTTPS 双向认证（mTLS）</h2><p><img src=/post/https-tls-and-mtls-and-certificate-related/mTLS.png width=1200 height=957 srcset="/post/https-tls-and-mtls-and-certificate-related/mTLS_hu691c76db58bb20ad1a46de3be4df611c_318787_480x0_resize_box_3.png 480w, /post/https-tls-and-mtls-and-certificate-related/mTLS_hu691c76db58bb20ad1a46de3be4df611c_318787_1024x0_resize_box_3.png 1024w" loading=lazy alt="mTLS 双向认证" class=gallery-image data-flex-grow=125 data-flex-basis=300px></p><ol><li>客户端发起建立 <code>HTTPS</code> 连接请求，将 <code>SSL</code> 协议版本的信息发送给服务端；</li><li>服务器端将本机的公钥证书（<code>server.crt</code>）发送给客户端；</li><li>客户端读取公钥证书（<code>server.crt</code>），取出了服务端公钥；</li><li>客户端将客户端公钥证书（<code>client.crt</code>）发送给服务器端；</li><li>服务器端使用根证书（<code>root.crt</code>）解密客户端公钥证书，拿到客户端公钥；</li><li>客户端发送自己支持的加密方案给服务器端；</li><li>服务器端根据自己和客户端的能力，选择一个双方都能接受的加密方案，使用客户端的公钥加密后发送给客户端；</li><li>客户端使用自己的私钥解密加密方案，生成一个随机数 <code>R</code>，使用服务器公钥加密后传给服务器端；</li><li>服务端用自己的私钥去解密这个密文，得到了密钥 <code>R</code></li><li>服务端和客户端在后续通讯过程中就使用这个密钥 <code>R</code> 进行通信了。</li></ol><p>证书准备：</p><ul><li>服务器端公钥证书：<code>server.crt</code></li><li>服务器端私钥文件：<code>server.key</code></li><li>根证书：<code>root.crt</code></li><li>客户端公钥证书：<code>client.crt</code></li><li>客户端私钥文件：<code>client.key</code></li><li>客户端集成证书（包括公钥和私钥，用于浏览器访问场景）：<code>client.p12</code></li></ul><p>所有证书都可以找 CA 机构签发，如果内网使用，非公众，则可以自建 <code>PKI</code>（Public Key Infrastructure） 系统自签发。</p><p>服务器除了单向认证步骤里，上传 <code>server.crt</code> 和 <code>server.key</code> 两个文件外，还需要额外添加 CA 证书 <code>root.crt</code>（假设 CA 证书就是根证书，不是子 CA 证书，否则需要上传整个证书链），这个 <code>client-CA</code>（<code>root.crt</code>) 证书相当于服务端也是一个客户端，需要提前信任一个签发 <code>client.crt</code> 的 CA 证书，便于客户端发送带客户端公钥的 <code>client.crt</code> 时，验明客户端身份，实现双向认证（即额外增加客户端的身份验证）。</p><p>因此客户端本地除了已经信任签发 <code>server.crt</code> 的 CA 证书，也需要上传 <code>client.crt</code> 和 <code>client.key</code>，就像服务端一样，为了可以安装浏览器，还需要将 <code>client.crt</code> 转为 <code>client.p12</code> 便于安装。</p><h2 id=自签名证书-mtls-实战>自签名证书 mTLS 实战</h2><p>找一台机器有 openssl 的 linux 机器模拟自签名</p><h3 id=自签名根证书-ca>自签名根证书 CA</h3><p>（1）创建根证书私钥：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>openssl genrsa -out root.key <span class=m>1024</span>
+</span></span></code></pre></td></tr></table></div></div><p>（2）创建根证书请求文件：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>openssl req -new -out root.csr -key root.key
+</span></span></code></pre></td></tr></table></div></div><p>后续参数请自行填写，下面是一个例子：</p><p>注意：CA 证书 <code>Common Name</code> 需要保证唯一性，不要与服务端证书或者客户端证书的 <code>Common Name</code> 相同。</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span><span class=lnt>8
+</span><span class=lnt>9
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>Country Name <span class=o>(</span><span class=m>2</span> letter code<span class=o>)</span> <span class=o>[</span>XX<span class=o>]</span>:cn
+</span></span><span class=line><span class=cl>State or Province Name <span class=o>(</span>full name<span class=o>)</span> <span class=o>[]</span>:bj
+</span></span><span class=line><span class=cl>Locality Name <span class=o>(</span>eg, city<span class=o>)</span> <span class=o>[</span>Default City<span class=o>]</span>:bj
+</span></span><span class=line><span class=cl>Organization Name <span class=o>(</span>eg, company<span class=o>)</span> <span class=o>[</span>Default Company Ltd<span class=o>]</span>:alibaba
+</span></span><span class=line><span class=cl>Organizational Unit Name <span class=o>(</span>eg, section<span class=o>)</span> <span class=o>[]</span>:test
+</span></span><span class=line><span class=cl>Common Name <span class=o>(</span>eg, your name or your servers hostname<span class=o>)</span> <span class=o>[]</span>:root
+</span></span><span class=line><span class=cl>Email Address <span class=o>[]</span>:a.alibaba.com
+</span></span><span class=line><span class=cl>A challenge password <span class=o>[]</span>:
+</span></span><span class=line><span class=cl>An optional company name <span class=o>[]</span>:
+</span></span></code></pre></td></tr></table></div></div><p>（3）创建根证书：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-jsx data-lang=jsx><span class=line><span class=cl><span class=nx>openssl</span> <span class=nx>x509</span> <span class=o>-</span><span class=nx>req</span> <span class=o>-</span><span class=k>in</span> <span class=nx>root</span><span class=p>.</span><span class=nx>csr</span> <span class=o>-</span><span class=nx>out</span> <span class=nx>root</span><span class=p>.</span><span class=nx>crt</span> <span class=o>-</span><span class=nx>signkey</span> <span class=nx>root</span><span class=p>.</span><span class=nx>key</span> <span class=o>-</span><span class=nx>CAcreateserial</span> <span class=o>-</span><span class=nx>days</span> <span class=mi>3650</span>
+</span></span></code></pre></td></tr></table></div></div><p>在创建证书请求文件的时候需要注意三点，下面生成服务器请求文件和客户端请求文件均要注意这三点： 根证书的 <code>Common Name</code> 填写 <code>root</code> 就可以，所有客户端和服务器端的证书这个字段需要填写域名，一定要注意的是，根证书的这个字段和客户端证书、服务器端证书不能一样； 其他所有字段的填写，根证书、服务器端证书、客户端证书需保持一致最后的密码可以直接回车跳过。</p><p>经过上面三个命令行，我们最终可以得到一个签名有效期为 10 年的根证书 <code>root.crt</code>，后面我们可以用这个根证书去颁发服务器证书和客户端证书。</p><h3 id=自签名服务端证书>自签名服务端证书</h3><p>（1）生成服务器端证书私钥：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>openssl genrsa -out server.key <span class=m>1024</span>
+</span></span></code></pre></td></tr></table></div></div><p>（2） 生成服务器证书请求文件，过程和注意事项参考根证书，本节不详述：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>openssl req -new -out server.csr -key server.key
+</span></span></code></pre></td></tr></table></div></div><p>（3） 生成服务器端公钥证书</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>openssl x509 -req -in server.csr -out server.crt -signkey server.key -CA root.crt -CAkey root.key -CAcreateserial -days <span class=m>3650</span>
+</span></span></code></pre></td></tr></table></div></div><p>经过上面的三个命令，我们得到：</p><p><code>server.key</code>：服务器端的密钥文件 <code>server.crt</code>：有效期十年的服务器端公钥证书，使用根证书和服务器端私钥文件一起生成</p><h3 id=自签名客户端证书>自签名客户端证书</h3><p>（1）生成客户端证书密钥：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>openssl genrsa -out client.key <span class=m>1024</span>
+</span></span><span class=line><span class=cl>openssl genrsa -out client2.key <span class=m>1024</span>
+</span></span></code></pre></td></tr></table></div></div><p>（2） 生成客户端证书请求文件，过程和注意事项参考根证书，本节不详述：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>openssl req -new -out client.csr -key client.key
+</span></span><span class=line><span class=cl>openssl req -new -out client2.csr -key client2.key
+</span></span></code></pre></td></tr></table></div></div><p>（3） 生客户端证书</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>openssl x509 -req -in client.csr -out client.crt -signkey client.key -CA root.crt -CAkey root.key -CAcreateserial -days <span class=m>3650</span>
+</span></span><span class=line><span class=cl>openssl x509 -req -in client2.csr -out client2.crt -signkey client2.key -CA root.crt -CAkey root.key -CAcreateserial -days <span class=m>3650</span>
+</span></span></code></pre></td></tr></table></div></div><p>（4） 生客户端p12格式证书，需要输入一个密码，选一个好记的，比如123456</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>openssl pkcs12 -export -clcerts -in client.crt -inkey client.key -out client.p12
+</span></span><span class=line><span class=cl>openssl pkcs12 -export -clcerts -in client2.crt -inkey client2.key -out client2.p12
+</span></span></code></pre></td></tr></table></div></div><p>重复使用上面的命令，我们得到两套客户端证书：</p><ul><li>client.key / client2.key：客户端的私钥文件</li><li>client.crt / client2.key：有效期十年的客户端证书</li></ul><p>使用根证书和客户端私钥一起生成 <code>client.p12/client2.p12</code>，这个证书文件包含客户端的公钥和私钥，主要用来给浏览器访问使用</p><h3 id=验证>验证</h3><p>使用 curl 加上证书路径，可以直接测试 Nginx 的 HTTPS 双向认证是否配置成功。下面我们测试三个用例：</p><ul><li>使用 <code>client.crt / client.key</code> 这一套客户端证书来调用服务器端</li><li>使用 <code>client2.crt / client2.key</code> 这一套客户端证书来调用服务器端</li><li>不使用证书来调用服务器端</li></ul><h4 id=带证书的成功调用>带证书的成功调用</h4><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span><span class=lnt>44
+</span><span class=lnt>45
+</span><span class=lnt>46
+</span><span class=lnt>47
+</span><span class=lnt>48
+</span><span class=lnt>49
+</span><span class=lnt>50
+</span><span class=lnt>51
+</span><span class=lnt>52
+</span><span class=lnt>53
+</span><span class=lnt>54
+</span><span class=lnt>55
+</span><span class=lnt>56
+</span><span class=lnt>57
+</span><span class=lnt>58
+</span><span class=lnt>59
+</span><span class=lnt>60
+</span><span class=lnt>61
+</span><span class=lnt>62
+</span><span class=lnt>63
+</span><span class=lnt>64
+</span><span class=lnt>65
+</span><span class=lnt>66
+</span><span class=lnt>67
+</span><span class=lnt>68
+</span><span class=lnt>69
+</span><span class=lnt>70
+</span><span class=lnt>71
+</span><span class=lnt>72
+</span><span class=lnt>73
+</span><span class=lnt>74
+</span><span class=lnt>75
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1>#--cert指定客户端公钥证书的路径</span>
+</span></span><span class=line><span class=cl><span class=c1>#--key指定客户端私钥文件的路径</span>
+</span></span><span class=line><span class=cl><span class=c1>#-k 使用本参数不校验证书的合法性，因为我们用的是自签名证书</span>
+</span></span><span class=line><span class=cl><span class=c1>#可以使用-v来观察具体的SSL握手过程</span>
+</span></span><span class=line><span class=cl>curl --cert ./client.crt --key ./client.key https://integration-fred2.fredhuang.com -k -v
+</span></span><span class=line><span class=cl>* Rebuilt URL to: https://47.93.XX.XX/
+</span></span><span class=line><span class=cl>*   Trying 47.93.XX.XX...
+</span></span><span class=line><span class=cl>* TCP_NODELAY <span class=nb>set</span>
+</span></span><span class=line><span class=cl>* Connected to 47.93.XX.XX <span class=o>(</span>47.93.XX.XX<span class=o>)</span> port <span class=m>443</span> <span class=o>(</span><span class=c1>#0)</span>
+</span></span><span class=line><span class=cl>* ALPN, offering h2
+</span></span><span class=line><span class=cl>* ALPN, offering http/1.1
+</span></span><span class=line><span class=cl>* Cipher selection: ALL:!EXPORT:!EXPORT40:!EXPORT56:!aNULL:!LOW:!RC4:@STRENGTH
+</span></span><span class=line><span class=cl>* successfully <span class=nb>set</span> certificate verify locations:
+</span></span><span class=line><span class=cl>*   CAfile: /etc/ssl/cert.pem
+</span></span><span class=line><span class=cl>  CApath: none
+</span></span><span class=line><span class=cl>* TLSv1.2 <span class=o>(</span>OUT<span class=o>)</span>, TLS handshake, Client hello <span class=o>(</span>1<span class=o>)</span>:
+</span></span><span class=line><span class=cl>* TLSv1.2 <span class=o>(</span>IN<span class=o>)</span>, TLS handshake, Server hello <span class=o>(</span>2<span class=o>)</span>:
+</span></span><span class=line><span class=cl>* TLSv1.2 <span class=o>(</span>IN<span class=o>)</span>, TLS handshake, Certificate <span class=o>(</span>11<span class=o>)</span>:
+</span></span><span class=line><span class=cl>* TLSv1.2 <span class=o>(</span>IN<span class=o>)</span>, TLS handshake, Server key exchange <span class=o>(</span>12<span class=o>)</span>:
+</span></span><span class=line><span class=cl>* TLSv1.2 <span class=o>(</span>IN<span class=o>)</span>, TLS handshake, Request CERT <span class=o>(</span>13<span class=o>)</span>:
+</span></span><span class=line><span class=cl>* TLSv1.2 <span class=o>(</span>IN<span class=o>)</span>, TLS handshake, Server finished <span class=o>(</span>14<span class=o>)</span>:
+</span></span><span class=line><span class=cl>* TLSv1.2 <span class=o>(</span>OUT<span class=o>)</span>, TLS handshake, Certificate <span class=o>(</span>11<span class=o>)</span>:
+</span></span><span class=line><span class=cl>* TLSv1.2 <span class=o>(</span>OUT<span class=o>)</span>, TLS handshake, Client key exchange <span class=o>(</span>16<span class=o>)</span>:
+</span></span><span class=line><span class=cl>* TLSv1.2 <span class=o>(</span>OUT<span class=o>)</span>, TLS handshake, CERT verify <span class=o>(</span>15<span class=o>)</span>:
+</span></span><span class=line><span class=cl>* TLSv1.2 <span class=o>(</span>OUT<span class=o>)</span>, TLS change cipher, Client hello <span class=o>(</span>1<span class=o>)</span>:
+</span></span><span class=line><span class=cl>* TLSv1.2 <span class=o>(</span>OUT<span class=o>)</span>, TLS handshake, Finished <span class=o>(</span>20<span class=o>)</span>:
+</span></span><span class=line><span class=cl>* TLSv1.2 <span class=o>(</span>IN<span class=o>)</span>, TLS change cipher, Client hello <span class=o>(</span>1<span class=o>)</span>:
+</span></span><span class=line><span class=cl>* TLSv1.2 <span class=o>(</span>IN<span class=o>)</span>, TLS handshake, Finished <span class=o>(</span>20<span class=o>)</span>:
+</span></span><span class=line><span class=cl>* SSL connection using TLSv1.2 / ECDHE-RSA-AES256-GCM-SHA384
+</span></span><span class=line><span class=cl>* ALPN, server accepted to use http/1.1
+</span></span><span class=line><span class=cl>* Server certificate:
+</span></span><span class=line><span class=cl>*  subject: <span class=nv>C</span><span class=o>=</span>CN<span class=p>;</span> <span class=nv>ST</span><span class=o>=</span>BJ<span class=p>;</span> <span class=nv>L</span><span class=o>=</span>BJ<span class=p>;</span> <span class=nv>O</span><span class=o>=</span>Alibaba<span class=p>;</span> <span class=nv>OU</span><span class=o>=</span>Test<span class=p>;</span> <span class=nv>CN</span><span class=o>=</span>integration-fred2.fredhuang.com<span class=p>;</span> <span class=nv>emailAddress</span><span class=o>=</span>a@alibaba.com
+</span></span><span class=line><span class=cl>*  start date: Nov  <span class=m>2</span> 01:01:34 <span class=m>2019</span> GMT
+</span></span><span class=line><span class=cl>*  expire date: Oct <span class=m>30</span> 01:01:34 <span class=m>2029</span> GMT
+</span></span><span class=line><span class=cl>*  issuer: <span class=nv>C</span><span class=o>=</span>CN<span class=p>;</span> <span class=nv>ST</span><span class=o>=</span>BJ<span class=p>;</span> <span class=nv>L</span><span class=o>=</span>BJ<span class=p>;</span> <span class=nv>O</span><span class=o>=</span>Alibaba<span class=p>;</span> <span class=nv>OU</span><span class=o>=</span>Test<span class=p>;</span> <span class=nv>CN</span><span class=o>=</span>root<span class=p>;</span> <span class=nv>emailAddress</span><span class=o>=</span>a@alibaba.com
+</span></span><span class=line><span class=cl>*  SSL certificate verify result: unable to get <span class=nb>local</span> issuer certificate <span class=o>(</span>20<span class=o>)</span>, continuing anyway.
+</span></span><span class=line><span class=cl>&gt; GET / HTTP/1.1
+</span></span><span class=line><span class=cl>&gt; host:integration-fred2.fredhuang.com
+</span></span><span class=line><span class=cl>&gt; User-Agent: curl/7.54.0
+</span></span><span class=line><span class=cl>&gt; Accept: */*
+</span></span><span class=line><span class=cl>&gt;
+</span></span><span class=line><span class=cl>&lt; HTTP/1.1 <span class=m>200</span> OK
+</span></span><span class=line><span class=cl>&lt; Server: nginx/1.17.5
+</span></span><span class=line><span class=cl>&lt; Date: Sat, <span class=m>02</span> Nov <span class=m>2019</span> 02:39:43 GMT
+</span></span><span class=line><span class=cl>&lt; Content-Type: text/html
+</span></span><span class=line><span class=cl>&lt; Content-Length: <span class=m>612</span>
+</span></span><span class=line><span class=cl>&lt; Last-Modified: Wed, <span class=m>30</span> Oct <span class=m>2019</span> 11:29:45 GMT
+</span></span><span class=line><span class=cl>&lt; Connection: keep-alive
+</span></span><span class=line><span class=cl>&lt; ETag: <span class=s2>&#34;5db97429-264&#34;</span>
+</span></span><span class=line><span class=cl>&lt; Accept-Ranges: bytes
+</span></span><span class=line><span class=cl>&lt;
+</span></span><span class=line><span class=cl>&lt;!DOCTYPE html&gt;
+</span></span><span class=line><span class=cl>&lt;html&gt;
+</span></span><span class=line><span class=cl>&lt;head&gt;
+</span></span><span class=line><span class=cl>&lt;title&gt;Welcome to nginx!&lt;/title&gt;
+</span></span><span class=line><span class=cl>&lt;style&gt;
+</span></span><span class=line><span class=cl>    body <span class=o>{</span>
+</span></span><span class=line><span class=cl>        width: 35em<span class=p>;</span>
+</span></span><span class=line><span class=cl>        margin: <span class=m>0</span> auto<span class=p>;</span>
+</span></span><span class=line><span class=cl>        font-family: Tahoma, Verdana, Arial, sans-serif<span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=o>}</span>
+</span></span><span class=line><span class=cl>&lt;/style&gt;
+</span></span><span class=line><span class=cl>&lt;/head&gt;
+</span></span><span class=line><span class=cl>&lt;body&gt;
+</span></span><span class=line><span class=cl>&lt;h1&gt;Welcome to nginx!&lt;/h1&gt;
+</span></span><span class=line><span class=cl>&lt;p&gt;If you see this page, the nginx web server is successfully installed and
+</span></span><span class=line><span class=cl>working. Further configuration is required.&lt;/p&gt;
+</span></span><span class=line><span class=cl>&lt;p&gt;For online documentation and support please refer to
+</span></span><span class=line><span class=cl>&lt;a <span class=nv>href</span><span class=o>=</span><span class=s2>&#34;http://nginx.org/&#34;</span>&gt;nginx.org&lt;/a&gt;.&lt;br/&gt;
+</span></span><span class=line><span class=cl>Commercial support is available at
+</span></span><span class=line><span class=cl>&lt;a <span class=nv>href</span><span class=o>=</span><span class=s2>&#34;http://nginx.com/&#34;</span>&gt;nginx.com&lt;/a&gt;.&lt;/p&gt;
+</span></span><span class=line><span class=cl>&lt;p&gt;&lt;em&gt;Thank you <span class=k>for</span> using nginx.&lt;/em&gt;&lt;/p&gt;
+</span></span><span class=line><span class=cl>&lt;/body&gt;
+</span></span><span class=line><span class=cl>&lt;/html&gt;
+</span></span><span class=line><span class=cl>* Connection <span class=c1>#0 to host 47.93.XX.XX left intact</span>
+</span></span></code></pre></td></tr></table></div></div><p>使用 <code>client2.crt / client2.key</code> 这一套客户端证书来调用服务器端</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>curl --cert ./client2.crt --key ./client2.key https://integration-fred2.fredhuang.com -k
+</span></span><span class=line><span class=cl>&lt;!DOCTYPE html&gt;
+</span></span><span class=line><span class=cl>&lt;html&gt;
+</span></span><span class=line><span class=cl>&lt;head&gt;
+</span></span><span class=line><span class=cl>&lt;title&gt;Welcome to nginx!&lt;/title&gt;
+</span></span><span class=line><span class=cl>&lt;style&gt;
+</span></span><span class=line><span class=cl>    body <span class=o>{</span>
+</span></span><span class=line><span class=cl>        width: 35em<span class=p>;</span>
+</span></span><span class=line><span class=cl>        margin: <span class=m>0</span> auto<span class=p>;</span>
+</span></span><span class=line><span class=cl>        font-family: Tahoma, Verdana, Arial, sans-serif<span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=o>}</span>
+</span></span><span class=line><span class=cl>&lt;/style&gt;
+</span></span><span class=line><span class=cl>&lt;/head&gt;
+</span></span><span class=line><span class=cl>&lt;body&gt;
+</span></span><span class=line><span class=cl>&lt;h1&gt;Welcome to nginx!&lt;/h1&gt;
+</span></span><span class=line><span class=cl>&lt;p&gt;If you see this page, the nginx web server is successfully installed and
+</span></span><span class=line><span class=cl>working. Further configuration is required.&lt;/p&gt;
+</span></span><span class=line><span class=cl>&lt;p&gt;For online documentation and support please refer to
+</span></span><span class=line><span class=cl>&lt;a <span class=nv>href</span><span class=o>=</span><span class=s2>&#34;http://nginx.org/&#34;</span>&gt;nginx.org&lt;/a&gt;.&lt;br/&gt;
+</span></span><span class=line><span class=cl>Commercial support is available at
+</span></span><span class=line><span class=cl>&lt;a <span class=nv>href</span><span class=o>=</span><span class=s2>&#34;http://nginx.com/&#34;</span>&gt;nginx.com&lt;/a&gt;.&lt;/p&gt;
+</span></span><span class=line><span class=cl>&lt;p&gt;&lt;em&gt;Thank you <span class=k>for</span> using nginx.&lt;/em&gt;&lt;/p&gt;
+</span></span><span class=line><span class=cl>&lt;/body&gt;
+</span></span><span class=line><span class=cl>&lt;/html&gt;
+</span></span></code></pre></td></tr></table></div></div><h4 id=不带证书的调用>不带证书的调用</h4><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span><span class=lnt>8
+</span><span class=lnt>9
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>curl https://integration-fred2.fredhuang.com -k
+</span></span><span class=line><span class=cl>&lt;html&gt;
+</span></span><span class=line><span class=cl>&lt;head&gt;&lt;title&gt;400 No required SSL certificate was sent&lt;/title&gt;&lt;/head&gt;
+</span></span><span class=line><span class=cl>&lt;body&gt;
+</span></span><span class=line><span class=cl>&lt;center&gt;&lt;h1&gt;400 Bad Request&lt;/h1&gt;&lt;/center&gt;
+</span></span><span class=line><span class=cl>&lt;center&gt;No required SSL certificate was sent&lt;/center&gt;
+</span></span><span class=line><span class=cl>&lt;hr&gt;&lt;center&gt;nginx/1.17.5&lt;/center&gt;
+</span></span><span class=line><span class=cl>&lt;/body&gt;
+</span></span><span class=line><span class=cl>&lt;/html&gt;
+</span></span></code></pre></td></tr></table></div></div><p>三个用例都符合预期，从第一个测试日志中可以看到，整个通信过程较长，客户端验证服务器端的证书，客户端也将自己的证书上传到服务器端进行验证。使用根证书颁发的两个客户端证书都可以正常发起双向HTTPS认证的调用。没有带客户端证书的调用会被服务器端拒绝服务。</p><h2 id=reference>Reference</h2><p><a class=link href=https://help.aliyun.com/zh/api-gateway/user-guide/mutual-tls-authentication target=_blank rel=noopener>什么是HTTPS双向认证(Mutual TLS authentication)_API 网关(API Gateway)-阿里云帮助中心</a></p><p><a class=link href=https://help.aliyun.com/zh/slb/classic-load-balancer/use-cases/configure-mutual-authentication-on-an-https-listener-1 target=_blank rel=noopener>使用CLB部署HTTPS业务（双向认证）_负载均衡(SLB)-阿里云帮助中心</a></p></section><footer class=article-footer><section class=article-tags><a href=/tags/network/>Network</a>
+<a href=/tags/cryptography/>Cryptography</a></section><section class=article-copyright><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><path d="M14.5 9a3.5 4 0 100 6"/></svg>
+<span>Licensed under CC BY-NC-SA 4.0</span></section></footer><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css integrity=sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV crossorigin=anonymous><script src=https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js integrity=sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8 crossorigin=anonymous defer></script><script src=https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js integrity=sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05 crossorigin=anonymous defer></script><script>window.addEventListener("DOMContentLoaded",()=>{renderMathInElement(document.body,{delimiters:[{left:"$$",right:"$$",display:!0},{left:"$",right:"$",display:!1},{left:"\\(",right:"\\)",display:!1},{left:"\\[",right:"\\]",display:!0}],ignoredClasses:["gist"]})})</script></article><aside class=related-content--wrapper><h2 class=section-title>相关文章</h2><div class=related-content><div class="flex article-list--tile"><article class=has-image><a href=/post/thoughts-on-java-lvalues-and-rvalues/><div class=article-image><img src=/post/thoughts-on-java-lvalues-and-rvalues/java-programming-cover.234de2e0b6de9957ec35995fb2be5099_hu4193375dbb5d85283668ea46b44f9b7a_34987_250x150_fill_box_smart1_3.png width=250 height=150 loading=lazy alt="Featured image of post Java 左值和右值的思考" data-key=Thoughts-on-Java-lvalues-and-rvalues data-hash="md5-I03i4LbemVfsNZlfsr5QmQ=="></div><div class=article-details><h2 class=article-title>Java 左值和右值的思考</h2></div></a></article><article class=has-image><a href=/post/some-thoughts-on-designing-absolute-method/><div class=article-image><img src=/post/some-thoughts-on-designing-absolute-method/java-programming-cover.234de2e0b6de9957ec35995fb2be5099_hu4193375dbb5d85283668ea46b44f9b7a_34987_250x150_fill_box_smart1_3.png width=250 height=150 loading=lazy alt="Featured image of post 关于设计绝对值 abs() 的一些思考" data-key=some-thoughts-on-designing-absolute-method data-hash="md5-I03i4LbemVfsNZlfsr5QmQ=="></div><div class=article-details><h2 class=article-title>关于设计绝对值 abs() 的一些思考</h2></div></a></article><article class=has-image><a href=/post/java-for_loop_for_each_iterator-efficiency-analysis/><div class=article-image><img src=/post/java-for_loop_for_each_iterator-efficiency-analysis/java-programming-cover.234de2e0b6de9957ec35995fb2be5099_hu4193375dbb5d85283668ea46b44f9b7a_34987_250x150_fill_box_smart1_3.png width=250 height=150 loading=lazy alt="Featured image of post Java For-loop For-each Iterator 效率分析" data-key=Java-for_loop_for_each_iterator-efficiency-analysis data-hash="md5-I03i4LbemVfsNZlfsr5QmQ=="></div><div class=article-details><h2 class=article-title>Java For-loop For-each Iterator 效率分析</h2></div></a></article><article class=has-image><a href=/post/iterator-concurrentmodificationexception-problem-when-remove/><div class=article-image><img src=/post/iterator-concurrentmodificationexception-problem-when-remove/java-programming-cover.234de2e0b6de9957ec35995fb2be5099_hu4193375dbb5d85283668ea46b44f9b7a_34987_250x150_fill_box_smart1_3.png width=250 height=150 loading=lazy alt="Featured image of post Iterator remove 时出现 ConcurrentModificationException" data-key=Iterator-ConcurrentModificationException-problem-when-remove data-hash="md5-I03i4LbemVfsNZlfsr5QmQ=="></div><div class=article-details><h2 class=article-title>Iterator remove 时出现 ConcurrentModificationException</h2></div></a></article></div></div></aside><footer class=site-footer><section class=copyright>&copy;
+2020 -
+2024 Capriwits's site</section><section class=powerby>使用 <a href=https://gohugo.io/ target=_blank rel=noopener>Hugo</a> 构建<br>主题 <b><a href=https://github.com/CaiJimmy/hugo-theme-stack target=_blank rel=noopener data-version=3.26.0>Stack</a></b> 由 <a href=https://jimmycai.com target=_blank rel=noopener>Jimmy</a> 设计</section></footer><div class=pswp tabindex=-1 role=dialog aria-hidden=true><div class=pswp__bg></div><div class=pswp__scroll-wrap><div class=pswp__container><div class=pswp__item></div><div class=pswp__item></div><div class=pswp__item></div></div><div class="pswp__ui pswp__ui--hidden"><div class=pswp__top-bar><div class=pswp__counter></div><button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+<button class="pswp__button pswp__button--share" title=Share></button>
+<button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+<button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button><div class=pswp__preloader><div class=pswp__preloader__icn><div class=pswp__preloader__cut><div class=pswp__preloader__donut></div></div></div></div></div><div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap"><div class=pswp__share-tooltip></div></div><button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+</button>
+<button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)"></button><div class=pswp__caption><div class=pswp__caption__center></div></div></div></div></div><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo=" crossorigin=anonymous defer></script><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU=" crossorigin=anonymous defer></script><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css crossorigin=anonymous><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css crossorigin=anonymous></main></div><script src=https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z+KMkF24hUW8WePSA9HM=" crossorigin=anonymous></script><script type=text/javascript src=/ts/main.js defer></script><script>(function(){const e=document.createElement("link");e.href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap",e.type="text/css",e.rel="stylesheet",document.head.appendChild(e)})()</script></body></html>

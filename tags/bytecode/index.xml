@@ -1,4 +1,18 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>ByteCode on Capriwits's site</title><link>https://capriwits.com/tags/bytecode/</link><description>Recent content in ByteCode on Capriwits's site</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><lastBuildDate>Sun, 02 Jun 2024 18:57:02 +0800</lastBuildDate><atom:link href="https://capriwits.com/tags/bytecode/index.xml" rel="self" type="application/rss+xml"/><item><title>Java 左值和右值的思考</title><link>https://capriwits.com/post/thoughts-on-java-lvalues-and-rvalues/</link><pubDate>Sun, 02 Jun 2024 18:57:02 +0800</pubDate><guid>https://capriwits.com/post/thoughts-on-java-lvalues-and-rvalues/</guid><description>&lt;img src="https://capriwits.com/post/thoughts-on-java-lvalues-and-rvalues/java-programming-cover.png" alt="Featured image of post Java 左值和右值的思考" />&lt;h1 id="java-左值和右值的思考">Java 左值和右值的思考
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>ByteCode on Capriwits's site</title><link>https://capriwits.com/tags/bytecode/</link><description>Recent content in ByteCode on Capriwits's site</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><lastBuildDate>Sun, 02 Jun 2024 18:57:02 +0800</lastBuildDate><atom:link href="https://capriwits.com/tags/bytecode/index.xml" rel="self" type="application/rss+xml"/><item><title>Java 左值和右值的思考</title><link>https://capriwits.com/post/thoughts-on-java-lvalues-and-rvalues/</link><pubDate>Sun, 02 Jun 2024 18:57:02 +0800</pubDate><guid>https://capriwits.com/post/thoughts-on-java-lvalues-and-rvalues/</guid><description>&lt;img src="https://capriwits.com/post/thoughts-on-java-lvalues-and-rvalues/java-programming-cover.png" alt="Featured image of post Java 左值和右值的思考" />&lt;!-- TOC -->
+&lt;ul>
+&lt;li>&lt;a class="link" href="#java-%e5%b7%a6%e5%80%bc%e5%92%8c%e5%8f%b3%e5%80%bc%e7%9a%84%e6%80%9d%e8%80%83" >Java 左值和右值的思考&lt;/a>
+&lt;ul>
+&lt;li>&lt;a class="link" href="#%e5%89%8d%e8%a8%80" >前言&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#%e9%97%ae%e9%a2%98%e5%a4%8d%e7%8e%b0" >问题复现&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#%e5%ad%97%e8%8a%82%e7%a0%81%e5%88%86%e6%9e%90" >字节码分析&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#%e5%85%b6%e4%bb%96%e5%ae%9e%e9%aa%8c" >其他实验&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#summary" >Summary&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#reference" >🔗Reference&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;!-- TOC -->
+&lt;h1 id="java-左值和右值的思考">Java 左值和右值的思考
 &lt;/h1>&lt;p>&lt;img src="https://img.shields.io/badge/JDK-21-red"
 loading="lazy"
 alt="JDK21"
@@ -10,7 +24,8 @@ alt="JDK21"
 &lt;p>小根堆存储的是原数组为负值的下标，则小根堆堆顶为最小负数的下标&lt;/p>
 &lt;p>本意是循环中，让最小负数取到相反数 &lt;code>k&lt;/code> 次，变成一个正数&lt;/p>
 &lt;p>&lt;code>while (k-- &amp;gt; 0) nums[queue.peek()] = -nums[queue.poll()];&lt;/code>&lt;/p>
-&lt;p>这一操作让我疑惑了很久，根据赋值表达式的性质，应该是从右计算到左，但是如果按照这个逻辑，就会让 &lt;code>poll()&lt;/code> 先进行，后面才 &lt;code>peek()&lt;/code> ，
+&lt;p>这一操作让我疑惑了很久，根据赋值表达式的性质，应该是从右计算到左，但是如果按照这个逻辑，就会让 &lt;code>poll()&lt;/code>
+先进行，后面才 &lt;code>peek()&lt;/code> ，
 这样下标的计算就出错了, 即 &lt;code>peek()&lt;/code> 实际取的下标值已经被 &lt;code>poll()&lt;/code> 出堆了&lt;/p>
 &lt;h2 id="问题复现">问题复现
 &lt;/h2>&lt;div class="highlight">&lt;div class="chroma">
@@ -32,7 +47,8 @@ alt="JDK21"
 &lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
 &lt;/div>
 &lt;/div>&lt;p>小根存存储原数组下标，此时堆顶为 &lt;code>0&lt;/code>&lt;/p>
-&lt;p>&lt;code>nums[pq.peek()] = -nums[pq.poll()]&lt;/code> 实际执行运行时状态是先执行 &lt;code>peek()&lt;/code>，再执行 &lt;code>poll()&lt;/code>，即从左到右，与赋值运算符 &lt;code>=&lt;/code> 右值赋值给左值不同&lt;/p>
+&lt;p>&lt;code>nums[pq.peek()] = -nums[pq.poll()]&lt;/code> 实际执行运行时状态是先执行 &lt;code>peek()&lt;/code>，再执行 &lt;code>poll()&lt;/code>，即从左到右，与赋值运算符 &lt;code>=&lt;/code>
+右值赋值给左值不同&lt;/p>
 &lt;p>即 &lt;code>nums[0] = -nums[0]&lt;/code> 取反&lt;/p>
 &lt;h2 id="字节码分析">字节码分析
 &lt;/h2>&lt;p>使用 &lt;code>javap -c Solution.class&lt;/code> 反编译字节码分析&lt;/p>
