@@ -1,4 +1,205 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on Capriwits's site</title><link>https://capriwits.com/post/</link><description>Recent content in Posts on Capriwits's site</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><lastBuildDate>Sun, 09 Jun 2024 16:47:46 +0800</lastBuildDate><atom:link href="https://capriwits.com/post/index.xml" rel="self" type="application/rss+xml"/><item><title>HTTPS 单双向认证及证书相关</title><link>https://capriwits.com/post/https-tls-and-mtls-and-certificate-related/</link><pubDate>Sun, 09 Jun 2024 16:47:46 +0800</pubDate><guid>https://capriwits.com/post/https-tls-and-mtls-and-certificate-related/</guid><description>&lt;img src="https://capriwits.com/post/https-tls-and-mtls-and-certificate-related/mtls-cover.png" alt="Featured image of post HTTPS 单双向认证及证书相关" />&lt;!-- TOC -->
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on Capriwits's site</title><link>https://capriwits.com/post/</link><description>Recent content in Posts on Capriwits's site</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><lastBuildDate>Fri, 12 Jul 2024 22:58:46 +0800</lastBuildDate><atom:link href="https://capriwits.com/post/index.xml" rel="self" type="application/rss+xml"/><item><title>MongoDB 修改表分片规则</title><link>https://capriwits.com/post/mongodb-modifying-table-sharding-rules/</link><pubDate>Fri, 12 Jul 2024 22:58:46 +0800</pubDate><guid>https://capriwits.com/post/mongodb-modifying-table-sharding-rules/</guid><description>&lt;img src="https://capriwits.com/post/mongodb-modifying-table-sharding-rules/mongodb-cover.jpg" alt="Featured image of post MongoDB 修改表分片规则" />&lt;!-- TOC -->
+&lt;ul>
+&lt;li>&lt;a class="link" href="#mongodb-%e4%bf%ae%e6%94%b9%e8%a1%a8%e5%88%86%e7%89%87%e8%a7%84%e5%88%99" >MongoDB 修改表分片规则&lt;/a>
+&lt;ul>
+&lt;li>&lt;a class="link" href="#%e8%83%8c%e6%99%af-" >背景&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#%e5%8e%9f%e7%90%86" >原理&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#%e8%a7%a3%e5%86%b3%e6%96%b9%e6%a1%88" >解决方案&lt;/a>
+&lt;ul>
+&lt;li>&lt;a class="link" href="#renamecollection-%e5%bd%b1%e5%ad%90%e6%8b%b7%e8%b4%9d" >RenameCollection 影子拷贝&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#mongodump-%e5%92%8c-mongorestore" >mongodump 和 mongorestore&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#mongoexport-%e5%92%8c-mongoimport" >mongoexport 和 mongoimport&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;!-- TOC -->
+&lt;h1 id="mongodb-修改表分片规则">MongoDB 修改表分片规则
+&lt;/h1>&lt;p>&lt;img src="https://img.shields.io/badge/MongoDB-3.6-fedcba"
+loading="lazy"
+>&lt;/p>
+&lt;h2 id="背景">背景
+&lt;/h2>&lt;p>Golang 模块需要 upsert MongoDB 的一个 Collection，该表的分片键 Sharding key 规则是指定 &lt;code>pid&lt;/code> 和 &lt;code>did&lt;/code> 双主键，
+业务上需要改为 &lt;code>did&lt;/code> 单主键，直接使用 golang mongo-driver 的 &lt;code>FindOneAndUpdate&lt;/code> 操作会报错&lt;/p>
+&lt;blockquote>
+&lt;p>&lt;code>shadow fail to Update Mongodb (ShardKeyNotFound) Query for sharded findAndModify must contain the shard key&lt;/code>&lt;/p>
+&lt;/blockquote>
+&lt;p>原因是分片键的规则与查询的 filter 对不上（did 单主键&lt;/p>
+&lt;p>为了适配业务，需要将该表的分片规则进行修改，改为 did 单主键&lt;/p>
+&lt;p>测试环境：MongoDB 3.6 版本，分片两份 &lt;code>shard-0&lt;/code> 和 &lt;code>shard-1&lt;/code>&lt;/p>
+&lt;blockquote>
+&lt;p>以下方案需要停机操作，无法做到读写操作同时修改（需要将原表删除&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="原理">原理
+&lt;/h2>&lt;p>参照 MySQL &lt;strong>影子拷贝法&lt;/strong>&lt;/p>
+&lt;p>将待修改表 &lt;code>base&lt;/code> 表 copy 一份影子 &lt;code>base_tmp&lt;/code>，该影子的分片键规则进行修改，再将 &lt;code>base&lt;/code> 表改为 &lt;code>base_bak&lt;/code> 用于冗余保留备份，也可 dump 成文件，然后 &lt;code>base_tmp&lt;/code> 改为 base 表&lt;/p>
+&lt;h2 id="解决方案">解决方案
+&lt;/h2>&lt;h3 id="renamecollection-影子拷贝">RenameCollection 影子拷贝
+&lt;/h3>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">use admin&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">// Step 1: 创建影子拷贝并设置新分片键
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">db.runCommand&lt;span class="o">({&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> shardCollection: &lt;span class="s2">&amp;#34;db_name.base&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> key: &lt;span class="o">{&lt;/span>did: 1&lt;span class="o">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="o">})&lt;/span>&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">use db_name&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">// Step 2: 复制数据
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">db.base.find&lt;span class="o">()&lt;/span>.forEach&lt;span class="o">(&lt;/span>&lt;span class="k">function&lt;/span> &lt;span class="o">(&lt;/span>doc&lt;span class="o">)&lt;/span> &lt;span class="o">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> db.base_tmp.insertOne&lt;span class="o">(&lt;/span>doc&lt;span class="o">)&lt;/span>&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="o">})&lt;/span>&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">// Step 3: 重命名原始集合以保留备份
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">db.base.renameCollection&lt;span class="o">(&lt;/span>&lt;span class="s2">&amp;#34;base_bak&amp;#34;&lt;/span>&lt;span class="o">)&lt;/span>&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">// Step 4: 重命名临时集合为原始集合
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">db.base_tmp.renameCollection&lt;span class="o">(&lt;/span>&lt;span class="s2">&amp;#34;base&amp;#34;&lt;/span>&lt;span class="o">)&lt;/span>&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>实际操作会在 &lt;code>renameCollection&lt;/code> 这一步报错&lt;/p>
+&lt;blockquote>
+&lt;p>&lt;code>You can't rename a sharded collection&lt;/code>&lt;/p>
+&lt;/blockquote>
+&lt;p>不能修改一个分片的表，因此解决方案只能将数据 dump 出来，再 restore 回新分片的表里&lt;/p>
+&lt;h3 id="mongodump-和-mongorestore">mongodump 和 mongorestore
+&lt;/h3>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">// mongodump 备份数据
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">mongodump --host ip:port --username ROOT --password PASSWORD --authenticationDatabase admin --db DB_NAME --collection base --out&lt;span class="o">=&lt;/span>base.bak.d
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">// 删除 base 表
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">db.base.drop&lt;span class="o">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">// 创建分片需要 root 账户，admin 表中
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">use admin&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">// 创建影子拷贝并设置新分片键
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">db.runCommand&lt;span class="o">({&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> shardCollection: &lt;span class="s2">&amp;#34;db_name.base&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> key: &lt;span class="o">{&lt;/span>did: 1&lt;span class="o">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="o">})&lt;/span>&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">sh.status&lt;span class="o">()&lt;/span> // 检查新分片规则
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">mongorestore --host ip:port --username ROOT --password PASSWORD --authenticationDatabase admin --db DB_NAME --collection base --dir&lt;span class="o">=&lt;/span>ota_shadow_device_base.bak.d/DB_NAME/base.bson
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;blockquote>
+&lt;p>&lt;code>Failed: ota_car_online.ota_shadow_device_base: error creating indexes for ota_car_online.ota_shadow_device_base: createIndex error: { mongodb-mongodb-sharding-shard-0/mongodb-mongodb-sharding-shard0-data-0.mongodb-mongodb-sharding-headless.bota-basic.svc.cluster.local:27017, mongodb-mongodb-sharding-shard0-data-1.mongodb-mongodb-sharding-headless.bota-basic.svc.cluster.local:27017, mongodb-mongodb-sharding-shard0-data-2.mongodb-mongodb-sharding-headless.bota-basic.svc.cluster.local:27017: &amp;quot;request doesn't allow collection to be created implicitly&amp;quot;, mongodb-mongodb-sharding-shard-1/mongodb-mongodb-sharding-shard1-data-0.mongodb-mongodb-sharding-headless.bota-basic.svc.cluster.local:27017, mongodb-mongodb-sharding-shard1-data-1.mongodb-mongodb-sharding-headless.bota-basic.svc.cluster.local:27017, mongodb-mongodb-sharding-shard1-data-2.mongodb-mongodb-sharding-headless.bota-basic.svc.cluster.local:27017: &amp;quot;cannot create unique index over { pid: 1.0, did: 1.0 } with shard key pattern { did: 1.0 }&amp;quot; }&lt;/code>&lt;/p>
+&lt;/blockquote>
+&lt;p>使用 &lt;code>mongodump&lt;/code> 指定 collection 只导出该 collection 的 bson 信息，但是还会带有额外的原始集合元数据，包括分片信息，因此旧数据的分片规则并不适用新分片集合中，所以 &lt;code>mongorestore&lt;/code> 会报错&lt;/p>
+&lt;h3 id="mongoexport-和-mongoimport">mongoexport 和 mongoimport
+&lt;/h3>&lt;p>mongoexport 和 mongoimport 的组合，一般涉及到单表，且纯数据操作，不涉及与 MongoDB 属性绑定的场景，例如导出导入 json csv 数据，因此使用该方案。&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;span class="lnt">22
+&lt;/span>&lt;span class="lnt">23
+&lt;/span>&lt;span class="lnt">24
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># 修改 ota_shadow_device_base 分片规则&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># 1. 在 /mongodb/bin 目录下，将 ota_shadow_device_base 数据备份&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">mongoexport --host IP:PORT --username &lt;span class="nv">$ROOT&lt;/span> --password &lt;span class="nv">$PASSWORD&lt;/span> --authenticationDatabase admin --db &lt;span class="nv">$DB_NAME&lt;/span> --collection ota_shadow_device_base --out ota_shadow_device_base.json --readPreference primary
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># 2. 删除原集合(务必先执行上述备份&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">mongo --host IP:PORT --username &lt;span class="nv">$ROOT&lt;/span> --password &lt;span class="nv">$PASSWORD&lt;/span> --authenticationDatabase admin --eval &lt;span class="s2">&amp;#34;db.ota_shadow_device_base.drop();&amp;#34;&lt;/span> ota_car_online
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># 3. 使用 ROOT 账户进入 mongo-cli&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># 手动创建集合，建立索引&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">use ota_car_online&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">db.createCollection&lt;span class="o">(&lt;/span>&lt;span class="s1">&amp;#39;ota_shadow_device_base&amp;#39;&lt;/span>&lt;span class="o">)&lt;/span>&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">db.ota_shadow_device_base.createIndex&lt;span class="o">({&lt;/span>did: 1&lt;span class="o">}&lt;/span>, &lt;span class="o">{&lt;/span>unique: true&lt;span class="o">})&lt;/span>&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">db.ota_shadow_device_base.createIndex&lt;span class="o">({&lt;/span>pid: 1&lt;span class="o">})&lt;/span>&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># 手动创建集合分片规则（需 ROOT 账户才能创建&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">use admin&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">db.runCommand&lt;span class="o">({&lt;/span>shardCollection: &lt;span class="s1">&amp;#39;ota_car_online.ota_shadow_device_base&amp;#39;&lt;/span>, key: &lt;span class="o">{&lt;/span>did: 1&lt;span class="o">}})&lt;/span>&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># 以下命令检查分片规则是否生效&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># ota_car_online.ota_shadow_device_base, shard key: { &amp;#34;did&amp;#34; : 1 }&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">sh.status&lt;span class="o">()&lt;/span>&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># 4. 数据还原&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># 退出 mongo-cli，在备份文件根目录处恢复数据，按照新分片规则导入数据&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">mongoimport --host IP:PORT --username &lt;span class="nv">$ROOT&lt;/span> --password &lt;span class="nv">$PASSWORD&lt;/span> --authenticationDatabase admin --db &lt;span class="nv">$DB_NAME&lt;/span> --collection ota_shadow_device_base --file ota_shadow_device_base.json --writeConcern majority
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>&lt;code>sh.status()&lt;/code> 查看分片是否设置成功&lt;/p>
+&lt;p>&lt;img src="https://capriwits.com/post/mongodb-modifying-table-sharding-rules/sharding-information.png"
+width="2060"
+height="246"
+srcset="https://capriwits.com/post/mongodb-modifying-table-sharding-rules/sharding-information_huc82d7b839fc53b7a5c86bd3cdfedcac6_170958_480x0_resize_box_3.png 480w, https://capriwits.com/post/mongodb-modifying-table-sharding-rules/sharding-information_huc82d7b839fc53b7a5c86bd3cdfedcac6_170958_1024x0_resize_box_3.png 1024w"
+loading="lazy"
+class="gallery-image"
+data-flex-grow="837"
+data-flex-basis="2009px"
+>&lt;/p></description></item><item><title>HTTPS 单双向认证及证书相关</title><link>https://capriwits.com/post/https-tls-and-mtls-and-certificate-related/</link><pubDate>Sun, 09 Jun 2024 16:47:46 +0800</pubDate><guid>https://capriwits.com/post/https-tls-and-mtls-and-certificate-related/</guid><description>&lt;img src="https://capriwits.com/post/https-tls-and-mtls-and-certificate-related/mtls-cover.png" alt="Featured image of post HTTPS 单双向认证及证书相关" />&lt;!-- TOC -->
 &lt;ul>
 &lt;li>&lt;a class="link" href="#https-%e5%8d%95%e5%8f%8c%e5%90%91%e8%ae%a4%e8%af%81%e5%8f%8a%e8%af%81%e4%b9%a6%e7%9b%b8%e5%85%b3" >HTTPS 单双向认证及证书相关&lt;/a>
 &lt;ul>
