@@ -1,7 +1,6 @@
 baseurl: https://capriwits.com
 languageCode: zh-cn
 theme: hugo-theme-stack
-paginate: 5
 title: Capriwits Site
 
 # Theme i18n support
@@ -22,6 +21,9 @@ services:
     # GA Tracking ID
     googleAnalytics:
         id:
+
+pagination:
+    pagerSize: 5
 
 permalinks:
     post: /post/:slug/
@@ -137,6 +139,7 @@ params:
             repo:
             clientID:
             clientSecret:
+            proxy:
 
         cusdis:
             host:
@@ -184,7 +187,7 @@ params:
             enabled: true
 
 ### Custom menu
-### See https://docs.stack.jimmycai.com/configuration/custom-menu.html
+### See https://stack.jimmycai.com/config/menu
 ### To remove about, archive and search page menu item, remove `menu` field from their FrontMatter
 menu:
     main: []
@@ -238,6 +241,18 @@ related:
 
 markup:
     goldmark:
+        extensions:
+            passthrough:
+                enable: true
+                delimiters:
+                    block:
+                        - - \[
+                          - \]
+                        - - $$
+                          - $$
+                    inline:
+                        - - \(
+                          - \)
         renderer:
             ## Set to true if you have HTML content inside Markdown
             unsafe: true
