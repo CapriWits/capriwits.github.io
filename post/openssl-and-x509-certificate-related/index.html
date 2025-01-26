@@ -1,0 +1,1277 @@
+<!doctype html><html lang=zh-cn dir=ltr><head><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><meta name=description content=" OpenSSL 及 X509 证书相关 哈希计算 编解码 验证网站证书链 随机数 RSA RSA 公私钥生成 RSA 私钥加密签名, 公钥验签 RSA 公钥加密, 私钥解密 X.509 证书相关操作 DER 和 PEM 格式转换 几种提取公钥的方法 私钥生成自签名证书 自签名证书的两种方式对比 快速生成证书和密钥 校验私钥与证书是否匹配 CA 签发证书 CA签发证书与自签名证书不同点 使用配置文件创建 CSR 和 X509 证书 配置文件创建 CSR 配置文件创建 X509 证书 X509v3 扩展参数 PKCS 证书格式转换 PKCS#1, PKCS#8, PKCS#10, x509 证书相关 PKCS#1 和 PKCS#8 互转 PKCS#7 证书链相关 PKCS#12 相关 ECC ECC 转换格式 ECDSA 签名与验签 ECDH 非对称加密 生成自签名 ECC 证书 AES Reference OpenSSL 及 X509 证书相关 "><title>OpenSSL 及 X509 证书相关</title>
+<link rel=canonical href=https://capriwits.com/post/openssl-and-x509-certificate-related/><link rel=stylesheet href=/scss/style.min.663803bebe609202d5b39d848f2d7c2dc8b598a2d879efa079fa88893d29c49c.css><meta property='og:title' content="OpenSSL 及 X509 证书相关"><meta property='og:description' content=" OpenSSL 及 X509 证书相关 哈希计算 编解码 验证网站证书链 随机数 RSA RSA 公私钥生成 RSA 私钥加密签名, 公钥验签 RSA 公钥加密, 私钥解密 X.509 证书相关操作 DER 和 PEM 格式转换 几种提取公钥的方法 私钥生成自签名证书 自签名证书的两种方式对比 快速生成证书和密钥 校验私钥与证书是否匹配 CA 签发证书 CA签发证书与自签名证书不同点 使用配置文件创建 CSR 和 X509 证书 配置文件创建 CSR 配置文件创建 X509 证书 X509v3 扩展参数 PKCS 证书格式转换 PKCS#1, PKCS#8, PKCS#10, x509 证书相关 PKCS#1 和 PKCS#8 互转 PKCS#7 证书链相关 PKCS#12 相关 ECC ECC 转换格式 ECDSA 签名与验签 ECDH 非对称加密 生成自签名 ECC 证书 AES Reference OpenSSL 及 X509 证书相关 "><meta property='og:url' content='https://capriwits.com/post/openssl-and-x509-certificate-related/'><meta property='og:site_name' content="Capriwits's site"><meta property='og:type' content='article'><meta property='article:section' content='Post'><meta property='article:tag' content='OpenSSL'><meta property='article:tag' content='Cryptography'><meta property='article:published_time' content='2025-01-26T20:43:16+08:00'><meta property='article:modified_time' content='2025-01-26T20:43:16+08:00'><meta property='og:image' content='https://capriwits.com/post/openssl-and-x509-certificate-related/openssl-icon.png'><meta name=twitter:title content="OpenSSL 及 X509 证书相关"><meta name=twitter:description content=" OpenSSL 及 X509 证书相关 哈希计算 编解码 验证网站证书链 随机数 RSA RSA 公私钥生成 RSA 私钥加密签名, 公钥验签 RSA 公钥加密, 私钥解密 X.509 证书相关操作 DER 和 PEM 格式转换 几种提取公钥的方法 私钥生成自签名证书 自签名证书的两种方式对比 快速生成证书和密钥 校验私钥与证书是否匹配 CA 签发证书 CA签发证书与自签名证书不同点 使用配置文件创建 CSR 和 X509 证书 配置文件创建 CSR 配置文件创建 X509 证书 X509v3 扩展参数 PKCS 证书格式转换 PKCS#1, PKCS#8, PKCS#10, x509 证书相关 PKCS#1 和 PKCS#8 互转 PKCS#7 证书链相关 PKCS#12 相关 ECC ECC 转换格式 ECDSA 签名与验签 ECDH 非对称加密 生成自签名 ECC 证书 AES Reference OpenSSL 及 X509 证书相关 "><meta name=twitter:card content="summary_large_image"><meta name=twitter:image content='https://capriwits.com/post/openssl-and-x509-certificate-related/openssl-icon.png'></head><body class=article-page><script>(function(){const e="StackColorScheme";localStorage.getItem(e)||localStorage.setItem(e,"auto")})()</script><script>(function(){const t="StackColorScheme",e=localStorage.getItem(t),n=window.matchMedia("(prefers-color-scheme: dark)").matches===!0;e=="dark"||e==="auto"&&n?document.documentElement.dataset.scheme="dark":document.documentElement.dataset.scheme="light"})()</script><div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky"><button class="hamburger hamburger--spin" type=button id=toggle-menu aria-label=切换菜单>
+<span class=hamburger-box><span class=hamburger-inner></span></span></button><header><figure class=site-avatar><a href=/><img src=/img/avatar_hu_b10ebf651e1d59c2.jpg width=300 height=300 class=site-logo loading=lazy alt=Avatar>
+</a><span class=emoji>🌹</span></figure><div class=site-meta><h1 class=site-name><a href=/>Capriwits's site</a></h1><h2 class=site-description>To see the world as it is and to love it.</h2></div></header><ol class=menu-social><li><a href=https://github.com/CapriWits target=_blank title=GitHub rel=me><svg class="icon icon-tabler icon-tabler-brand-github" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6.0 00-1.3-3.2 4.2 4.2.0 00-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3.0 00-6.2.0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2.0 00-.1 3.2A4.6 4.6.0 004 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/></svg></a></li><li><a href=mailto://hypocrite30@foxmail.com target=_blank title=Mail rel=me><!doctype html><svg id="Layer_1" xmlns:xlink="http://www.w3.org/1999/xlink" width="212.795" height="220.59" viewBox="0 0 212.795 220.59" enable-background="new 0 0 212.795 220.59"><path fill="#f7b63e" d="M206.382 36.693v138.896c0 2.718-2.207 4.924-4.926 4.924H11.338c-2.719.0-4.925-2.206-4.925-4.924V36.693l73.042 69.448 26.943 25.612 26.941-25.612 73.043-69.448z"/><path fill="#10003b" d="M201.456 182.514H11.338c-3.819.0-6.925-3.106-6.925-6.925V36.694c0-.8.477-1.523 1.211-1.838.736-.315 1.588-.163 2.167.389l98.606 93.749 98.606-93.749c.579-.552 1.432-.704 2.167-.389.734.315 1.211 1.038 1.211 1.838v138.895C208.382 179.408 205.275 182.514 201.456 182.514M8.413 41.354v134.234c0 1.613 1.312 2.925 2.925 2.925h190.118c1.613.0 2.926-1.312 2.926-2.925V41.354l-96.606 91.848c-.771.734-1.984.734-2.756.0L8.413 41.354z"/><path fill="#ffd161" d="M206.382 36.693l-73.043 69.448-26.941 25.612-26.943-25.612L6.413 36.693c0-2.719 2.206-4.925 4.925-4.925h190.118C204.175 31.769 206.382 33.975 206.382 36.693"/><path fill="#10003b" d="M106.398 133.753c-.496.0-.993-.184-1.378-.551L5.035 38.143c-.397-.377-.622-.901-.622-1.449.0-3.818 3.107-6.925 6.925-6.925h190.118c3.82.0 6.926 3.107 6.926 6.925.0.548-.225 1.072-.622 1.449l-99.984 95.06C107.39 133.569 106.894 133.753 106.398 133.753M8.514 35.931l97.884 93.063 97.883-93.063c-.337-1.244-1.476-2.162-2.825-2.162H11.338C9.988 33.769 8.85 34.687 8.514 35.931M206.382 36.693h.01H206.382z"/><path fill="#f7b63e" d="M206.382 175.589c0 2.719-2.207 4.925-4.926 4.925H11.338c-2.719.0-4.925-2.206-4.925-4.925l73.042-69.447 26.943 25.611 26.941-25.611 73.043 69.447z"/><path fill="#10003b" d="M201.456 182.514H11.338c-3.818.0-6.925-3.106-6.925-6.925.0-.548.225-1.072.622-1.449l73.042-69.447c.772-.735 1.985-.735 2.756.0l25.565 24.301 25.563-24.301c.771-.735 1.984-.735 2.756.0l73.043 69.447c.398.377.622.901.622 1.449C208.382 179.408 205.275 182.514 201.456 182.514M8.514 176.352c.336 1.244 1.475 2.162 2.824 2.162h190.118c1.35.0 2.489-.918 2.826-2.162l-70.943-67.45-25.563 24.301c-.772.734-1.985.734-2.756.0l-25.565-24.301-70.941 67.45z"/><polygon fill="#ffd161" points="79.456,106.141 6.416,175.593 6.416,36.69"/><path fill="#10003b" d="M6.416 177.593c-.267.0-.534-.053-.788-.162-.735-.315-1.212-1.038-1.212-1.838V36.69c0-.8.477-1.523 1.211-1.838.736-.315 1.588-.162 2.167.389l73.04 69.451c.397.377.622.901.622 1.449s-.225 1.072-.622 1.449l-73.04 69.452C7.415 177.403 6.919 177.593 6.416 177.593m2-136.242v129.581l68.138-64.791L8.416 41.351z"/><path fill="#10003b" d="M152.941 47.313h-62.06c-1.104.0-2-.896-2-2s.896-2 2-2h62.06c1.104.0 2 .896 2 2 0 1.105-.89500000000001 2-2 2"/><path fill="#10003b" d="M80.293 47.313h-20.44c-1.105.0-2-.896-2-2s.895-2 2-2h20.44c1.104.0 2 .896 2 2 0 1.105-.896000000000001 2-2 2"/><path fill="#10003b" d="M19.219 129.813c-1.104.0-2-.896-2-2V91.12c0-1.105.896-2 2-2s2 .895 2 2v36.693C21.219 128.917 20.323 129.813 19.219 129.813"/></svg></a></li><li><a href=https://twitter.com/noctambulist30 target=_blank title=Twitter rel=me><svg id="Layer_1" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512" style="enable-background:new 0 0 512 512"><style>.st0{fill:#0cf}.st1{fill-rule:evenodd;clip-rule:evenodd;fill:#fff}</style><g><g><g><path class="st0" d="M503.6277 98.9293c-15.8539 7.1724-33.3008 11.5266-50.4099 14.3986 8.1227-1.3628 20.0931-16.0676 24.8777-22.0133 7.3009-9.0701 13.3735-19.4058 16.7879-30.5663.4348-.8711.7665-1.9664-.1046-2.6269-1.0953-.4348-1.8006-.2122-2.6717.2241-19.0965 10.2326-38.8504 17.6575-59.8715 22.9113-1.7423.4363-3.0348.0-4.1301-1.0938-1.7408-1.9679-3.3785-3.8208-5.2328-5.3524-8.8355-7.5176-18.3165-13.4154-29.0048-17.7711-14.0355-5.7215-29.3694-8.1451-44.4853-7.1649-14.7064.9548-29.1497 5.1014-42.2035 11.9211-13.0806 6.8347-24.7522 16.3411-34.0464 27.8109-9.614 11.8628-16.7042 25.8744-20.3337 40.7227-3.504 14.3313-3.2171 28.5087-1.0788 42.997.3242 2.4013.1136 2.7255-2.0636 2.4013C167.4175 163.4898 99.2485 134.0606 43.912 71.0033c-2.4027-2.7375-3.7072-2.7375-5.6752.2107-24.2158 36.2953-12.4665 94.6127 17.7845 123.2694 4.0315 3.8208 8.1765 7.6416 12.6443 11.1262-1.6302.3347-21.7622-1.8454-39.7007-11.1262-2.4027-1.5182-3.6086-.647-3.8208 2.0785-.2226 3.9209.1121 7.5295.65 11.7851 4.6471 36.7928 30.1285 70.8273 65.0222 84.1052 4.145 1.7423 8.7249 3.2724 13.1942 4.0315-7.9524 1.7423-16.1409 2.99-38.9416 1.2058-2.8376-.5454-3.9209.8727-2.8376 3.5981 17.1345 46.6997 54.1186 60.5932 81.816 68.5098 3.7072.6485 7.4174.6485 11.1351 1.5197-.2227.3347-.4453.3347-.6575.6589-9.1881 14.0056-41.041 24.4295-55.8729 29.613-26.9756 9.4272-56.3481 13.6694-84.8568 10.8587-4.5634-.6694-5.5212-.6201-6.7585.0-1.2522.774-.1584 1.8633 1.306 3.0497 5.7872 3.8193 11.6746 7.2053 17.674 10.4792 18.1073 9.5946 36.9841 17.2346 56.7231 22.6872 101.939 28.1516 216.7675 7.4653 293.3088-68.583 60.1076-59.7206 81.1735-142.0775 81.1735-224.539.0-3.2276 3.8133-5.0102 6.0801-6.7122 15.6388-11.7508 28.068-25.8116 39.7336-41.5132 2.6209-3.5279 2.4595-6.6643 2.4595-7.9524.0-.2226.0-.4348.0-.4348C505.4955 97.6114 505.6569 98.0074 503.6277 98.9293z"/></g><g><path class="st1" d="M154.6851 458.9174c42.2722.0 2.0291.0.0.0 5.56299999999999.0-.224199999999996.0.0.0z"/></g><g><path class="st1" d="M154.6851 458.9174c-.656000000000006.0508000000000379-8.2363.0.0.0.0.0-1.31950000000001.0.0.0z"/></g><g><path class="st1" d="M171.4849 459.3537c0-.841200000000015 8.84139999999999.0.0.0.0-.436300000000017 1.0848.0.0.0z"/></g><g><path class="st1" d="M347.9839 50.2692c-.5484.4348-1.3075.4348-2.0651.0C346.6764 50.2692 347.4355 50.2692 347.9839 50.2692z"/></g></g></g></svg></a></li><li><a href=https://t.me/capriwits target=_blank title=Telegram rel=me><svg width="256" height="256" viewBox="0 0 256 256" preserveAspectRatio="xMidYMid"><title>Telegram</title><defs><linearGradient x1="50%" y1="277555756e-23%" x2="50%" y2="100%" id="telegramLinearGradient-1"><stop stop-color="#2aabee" offset="0"/><stop stop-color="#229ed9" offset="100%"/></linearGradient></defs><g><path d="M128 0C94.06.0 61.48 13.494 37.5 37.49 13.5 61.486.0 94.066.0 128s13.5 66.514 37.5 90.51C61.48 242.506 94.06 256 128 256s66.52-13.494 90.5-37.49c24-23.996 37.5-56.576 37.5-90.51s-13.5-66.514-37.5-90.51C194.52 13.494 161.94.0 128 0z" fill="url(#telegramLinearGradient-1)"/><path d="M57.94 126.6476c37.32-16.256 62.2-26.974 74.64-32.152 35.56-14.786 42.94-17.354 47.76-17.4408458C181.4 77.0376 183.76 77.2996 185.3 78.5456 186.58 79.5956 186.94 81.0156 187.12 82.0116 187.28 83.0076 187.5 85.2776 187.32 87.0496 185.4 107.2896 177.06 156.4056 172.82 179.0756 171.04 188.668 167.5 191.884 164.08 192.198 156.64 192.882 151 187.286 143.8 182.5676c-11.26-7.386-17.62-11.982-28.56-19.188C102.6 155.0516 110.8 150.4736 118 142.9936c1.88-1.958 34.64-31.748 35.26-34.45C153.34 108.2056 153.42 106.9456 152.66 106.2816 151.92 105.6156 150.82 105.8436 150.02 106.0236c-1.14000000000001.256-19.12 12.152-54 35.686C90.92 145.2176 86.3 146.9276 82.14 146.8376 77.58 146.7396 68.78 144.2536 62.24 142.1296 54.24 139.5236 47.86 138.1456 48.42 133.7196 48.7 131.4156 51.88 129.0576 57.94 126.6476z" fill="#fff"/></g></svg></a></li><li><a href=/index.xml target=_blank title=RSS rel=me><svg class="icon icon-tabler icon-tabler-rss" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="5" cy="19" r="1"/><path d="M4 4a16 16 0 0116 16"/><path d="M4 11a9 9 0 019 9"/></svg></a></li></ol><ol class=menu id=main-menu><li><a href=/><svg class="icon icon-tabler icon-tabler-home" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><polyline points="5 12 3 12 12 3 21 12 19 12"/><path d="M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/><path d="M9 21v-6a2 2 0 012-2h2a2 2 0 012 2v6"/></svg>
+<span>主页</span></a></li><li><a href=/about/><svg class="icon icon-tabler icon-tabler-user" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="7" r="4"/><path d="M6 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/></svg>
+<span>关于</span></a></li><li><a href=/archives/><svg class="icon icon-tabler icon-tabler-archive" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><rect x="3" y="4" width="18" height="4" rx="2"/><path d="M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+<span>归档</span></a></li><li><a href=/search/><svg class="icon icon-tabler icon-tabler-search" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="10" cy="10" r="7"/><line x1="21" y1="21" x2="15" y2="15"/></svg>
+<span>搜索</span></a></li><li><a href=/link/><svg class="icon icon-tabler icon-tabler-link" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><path d="M10 14a3.5 3.5.0 005 0l4-4a3.5 3.5.0 00-5-5l-.5.5"/><path d="M14 10a3.5 3.5.0 00-5 0l-4 4a3.5 3.5.0 005 5l.5-.5"/></svg>
+<span>友链</span></a></li><li class=menu-bottom-section><ol class=menu><li id=dark-mode-toggle><svg class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="8" cy="12" r="2"/><rect x="2" y="6" width="20" height="12" rx="6"/></svg>
+<svg class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="16" cy="12" r="2"/><rect x="2" y="6" width="20" height="12" rx="6"/></svg>
+<span>暗色模式</span></li></ol></li></ol></aside><aside class="sidebar right-sidebar sticky"><section class="widget archives"><div class=widget-icon><svg class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><line x1="5" y1="9" x2="19" y2="9"/><line x1="5" y1="15" x2="19" y2="15"/><line x1="11" y1="4" x2="7" y2="20"/><line x1="17" y1="4" x2="13" y2="20"/></svg></div><h2 class="widget-title section-title">目录</h2><div class=widget--toc><nav id=TableOfContents><ol><li><a href=#rsa-公私钥生成>RSA 公私钥生成</a></li><li><a href=#rsa-私钥加密签名-公钥验签>RSA 私钥加密签名, 公钥验签</a></li><li><a href=#rsa-公钥加密-私钥解密>RSA 公钥加密, 私钥解密</a></li></ol><ol><li><a href=#der-和-pem-格式转换>DER 和 PEM 格式转换</a></li><li><a href=#几种提取公钥的方法>几种提取公钥的方法</a></li><li><a href=#私钥生成自签名证书>私钥生成自签名证书</a><ol><li><a href=#自签名证书的两种方式对比>自签名证书的两种方式对比</a></li><li><a href=#快速生成证书和密钥>快速生成证书和密钥</a></li></ol></li><li><a href=#校验私钥与证书是否匹配>校验私钥与证书是否匹配</a></li><li><a href=#ca-签发证书>CA 签发证书</a><ol><li><a href=#ca签发证书与自签名证书不同点>CA签发证书与自签名证书不同点</a></li></ol></li><li><a href=#使用配置文件创建-csr-和-x509-证书>使用配置文件创建 CSR 和 X509 证书</a><ol><li><a href=#配置文件创建-csr>配置文件创建 CSR</a></li><li><a href=#配置文件创建-x509-证书>配置文件创建 X509 证书</a></li></ol></li><li><a href=#x509v3-扩展参数>X509v3 扩展参数</a></li><li><a href=#pkcs-证书格式转换>PKCS 证书格式转换</a><ol><li><a href=#pkcs1-pkcs8-pkcs10-x509-证书相关>PKCS#1, PKCS#8, PKCS#10, x509 证书相关</a></li><li><a href=#pkcs1-和-pkcs8-互转>PKCS#1 和 PKCS#8 互转</a></li><li><a href=#pkcs7-证书链相关>PKCS#7 证书链相关</a></li><li><a href=#pkcs12-相关>PKCS#12 相关</a></li></ol></li></ol><ol><li><a href=#ecc-转换格式>ECC 转换格式</a></li><li><a href=#ecdsa-签名与验签>ECDSA 签名与验签</a></li><li><a href=#ecdh-非对称加密>ECDH 非对称加密</a></li><li><a href=#生成自签名-ecc-证书>生成自签名 ECC 证书</a></li></ol></nav></div></section></aside><main class="main full-width"><article class="has-image main-article"><header class=article-header><div class=article-image><a href=/post/openssl-and-x509-certificate-related/><img src=/post/openssl-and-x509-certificate-related/openssl-icon_hu_b7acd38e4ab7b195.png srcset="/post/openssl-and-x509-certificate-related/openssl-icon_hu_b7acd38e4ab7b195.png 800w, /post/openssl-and-x509-certificate-related/openssl-icon_hu_8d8c0c60446967d9.png 1600w" width=800 height=325 loading=lazy alt="Featured image of post OpenSSL 及 X509 证书相关"></a></div><div class=article-details><header class=article-category><a href=/categories/backend/>Backend</a></header><div class=article-title-wrapper><h2 class=article-title><a href=/post/openssl-and-x509-certificate-related/>OpenSSL 及 X509 证书相关</a></h2></div><footer class=article-time><div><svg class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><path d="M11.795 21H5a2 2 0 01-2-2V7a2 2 0 012-2h12a2 2 0 012 2v4"/><circle cx="18" cy="18" r="4"/><path d="M15 3v4"/><path d="M7 3v4"/><path d="M3 11h16"/><path d="M18 16.496V18l1 1"/></svg>
+<time class=article-time--published>Jan 26, 2025</time></div><div><svg class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+<time class=article-time--reading>阅读时长: 18 分钟</time></div></footer></div></header><section class=article-content><ul><li><a class=link href=#openssl-%e5%8f%8a-x509-%e8%af%81%e4%b9%a6%e7%9b%b8%e5%85%b3>OpenSSL 及 X509 证书相关</a></li><li><a class=link href=#%e5%93%88%e5%b8%8c%e8%ae%a1%e7%ae%97>哈希计算</a></li><li><a class=link href=#%e7%bc%96%e8%a7%a3%e7%a0%81>编解码</a></li><li><a class=link href=#%e9%aa%8c%e8%af%81%e7%bd%91%e7%ab%99%e8%af%81%e4%b9%a6%e9%93%be>验证网站证书链</a></li><li><a class=link href=#%e9%9a%8f%e6%9c%ba%e6%95%b0>随机数</a></li><li><a class=link href=#rsa>RSA</a><ul><li><a class=link href=#rsa-%e5%85%ac%e7%a7%81%e9%92%a5%e7%94%9f%e6%88%90>RSA 公私钥生成</a></li><li><a class=link href=#rsa-%e7%a7%81%e9%92%a5%e5%8a%a0%e5%af%86%e7%ad%be%e5%90%8d-%e5%85%ac%e9%92%a5%e9%aa%8c%e7%ad%be>RSA 私钥加密签名, 公钥验签</a></li><li><a class=link href=#rsa-%e5%85%ac%e9%92%a5%e5%8a%a0%e5%af%86-%e7%a7%81%e9%92%a5%e8%a7%a3%e5%af%86>RSA 公钥加密, 私钥解密</a></li></ul></li><li><a class=link href=#x509-%e8%af%81%e4%b9%a6%e7%9b%b8%e5%85%b3%e6%93%8d%e4%bd%9c>X.509 证书相关操作</a><ul><li><a class=link href=#der-%e5%92%8c-pem-%e6%a0%bc%e5%bc%8f%e8%bd%ac%e6%8d%a2>DER 和 PEM 格式转换</a></li><li><a class=link href=#%e5%87%a0%e7%a7%8d%e6%8f%90%e5%8f%96%e5%85%ac%e9%92%a5%e7%9a%84%e6%96%b9%e6%b3%95>几种提取公钥的方法</a></li><li><a class=link href=#%e7%a7%81%e9%92%a5%e7%94%9f%e6%88%90%e8%87%aa%e7%ad%be%e5%90%8d%e8%af%81%e4%b9%a6>私钥生成自签名证书</a><ul><li><a class=link href=#%e8%87%aa%e7%ad%be%e5%90%8d%e8%af%81%e4%b9%a6%e7%9a%84%e4%b8%a4%e7%a7%8d%e6%96%b9%e5%bc%8f%e5%af%b9%e6%af%94>自签名证书的两种方式对比</a></li><li><a class=link href=#%e5%bf%ab%e9%80%9f%e7%94%9f%e6%88%90%e8%af%81%e4%b9%a6%e5%92%8c%e5%af%86%e9%92%a5>快速生成证书和密钥</a></li></ul></li><li><a class=link href=#%e6%a0%a1%e9%aa%8c%e7%a7%81%e9%92%a5%e4%b8%8e%e8%af%81%e4%b9%a6%e6%98%af%e5%90%a6%e5%8c%b9%e9%85%8d>校验私钥与证书是否匹配</a></li><li><a class=link href=#ca-%e7%ad%be%e5%8f%91%e8%af%81%e4%b9%a6>CA 签发证书</a><ul><li><a class=link href=#ca%e7%ad%be%e5%8f%91%e8%af%81%e4%b9%a6%e4%b8%8e%e8%87%aa%e7%ad%be%e5%90%8d%e8%af%81%e4%b9%a6%e4%b8%8d%e5%90%8c%e7%82%b9>CA签发证书与自签名证书不同点</a></li></ul></li><li><a class=link href=#%e4%bd%bf%e7%94%a8%e9%85%8d%e7%bd%ae%e6%96%87%e4%bb%b6%e5%88%9b%e5%bb%ba-csr-%e5%92%8c-x509-%e8%af%81%e4%b9%a6>使用配置文件创建 CSR 和 X509 证书</a><ul><li><a class=link href=#%e9%85%8d%e7%bd%ae%e6%96%87%e4%bb%b6%e5%88%9b%e5%bb%ba-csr>配置文件创建 CSR</a></li><li><a class=link href=#%e9%85%8d%e7%bd%ae%e6%96%87%e4%bb%b6%e5%88%9b%e5%bb%ba-x509-%e8%af%81%e4%b9%a6>配置文件创建 X509 证书</a></li></ul></li><li><a class=link href=#x509v3-%e6%89%a9%e5%b1%95%e5%8f%82%e6%95%b0>X509v3 扩展参数</a></li><li><a class=link href=#pkcs-%e8%af%81%e4%b9%a6%e6%a0%bc%e5%bc%8f%e8%bd%ac%e6%8d%a2>PKCS 证书格式转换</a><ul><li><a class=link href=#pkcs1-pkcs8-pkcs10-x509-%e8%af%81%e4%b9%a6%e7%9b%b8%e5%85%b3>PKCS#1, PKCS#8, PKCS#10, x509 证书相关</a></li><li><a class=link href=#pkcs1-%e5%92%8c-pkcs8-%e4%ba%92%e8%bd%ac>PKCS#1 和 PKCS#8 互转</a></li><li><a class=link href=#pkcs7-%e8%af%81%e4%b9%a6%e9%93%be%e7%9b%b8%e5%85%b3>PKCS#7 证书链相关</a></li><li><a class=link href=#pkcs12-%e7%9b%b8%e5%85%b3>PKCS#12 相关</a></li></ul></li></ul></li><li><a class=link href=#ecc>ECC</a><ul><li><a class=link href=#ecc-%e8%bd%ac%e6%8d%a2%e6%a0%bc%e5%bc%8f>ECC 转换格式</a></li><li><a class=link href=#ecdsa-%e7%ad%be%e5%90%8d%e4%b8%8e%e9%aa%8c%e7%ad%be>ECDSA 签名与验签</a></li><li><a class=link href=#ecdh-%e9%9d%9e%e5%af%b9%e7%a7%b0%e5%8a%a0%e5%af%86>ECDH 非对称加密</a></li><li><a class=link href=#%e7%94%9f%e6%88%90%e8%87%aa%e7%ad%be%e5%90%8d-ecc-%e8%af%81%e4%b9%a6>生成自签名 ECC 证书</a></li></ul></li><li><a class=link href=#aes>AES</a></li><li><a class=link href=#reference>Reference</a></li></ul><h1 id=openssl-及-x509-证书相关>OpenSSL 及 X509 证书相关</h1><p><img src=https://img.shields.io/badge/OpenSSL-1.0.2k--fips_2017-blue loading=lazy alt=OpenSSL-1.0.2k>
+<img src=https://img.shields.io/badge/OpenSSL-3.4.0--2024-green loading=lazy alt=OpenSSL-3.4.0></p><h1 id=哈希计算>哈希计算</h1><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 计算 SHA256 哈希值</span>
+</span></span><span class=line><span class=cl>openssl dgst -sha256 plaintext.txt
+</span></span><span class=line><span class=cl>openssl sha256 plaintext.txt
+</span></span><span class=line><span class=cl><span class=c1># 等价于：sha256sum plaintext.txt</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 计算 MD5 哈希值</span>
+</span></span><span class=line><span class=cl>openssl dgst -md5 plaintext.txt
+</span></span><span class=line><span class=cl><span class=c1># 等价于：md5sum plaintext.txt</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># HMAC</span>
+</span></span><span class=line><span class=cl><span class=c1># 不指定，默认为 HMAC-SHA256</span>
+</span></span><span class=line><span class=cl>openssl dgst -hmac <span class=s2>&#34;key&#34;</span> plaintext.txt 
+</span></span><span class=line><span class=cl><span class=c1># HMAC-MD5</span>
+</span></span><span class=line><span class=cl>openssl dgst -hmac <span class=s2>&#34;key&#34;</span> -md5 plaintext.txt
+</span></span><span class=line><span class=cl><span class=c1># HMAC-SHA1</span>
+</span></span><span class=line><span class=cl>openssl dgst -hmac <span class=s2>&#34;key&#34;</span> -sha1 plaintext.txt
+</span></span><span class=line><span class=cl><span class=c1># HMAC-SHA256</span>
+</span></span><span class=line><span class=cl>openssl dgst -hmac <span class=s2>&#34;key&#34;</span> -sha256 plaintext.txt
+</span></span></code></pre></td></tr></table></div></div><h1 id=编解码>编解码</h1><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 编码</span>
+</span></span><span class=line><span class=cl>openssl base64 -in plaintext.txt -out encoded.txt
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 解码</span>
+</span></span><span class=line><span class=cl>openssl base64 -d -in encoded.txt -out decoded.txt
+</span></span></code></pre></td></tr></table></div></div><h1 id=验证网站证书链>验证网站证书链</h1><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 获取网站的完整证书链信息</span>
+</span></span><span class=line><span class=cl>openssl s_client -showcerts -connect example.com:443
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 保存完整证书链</span>
+</span></span><span class=line><span class=cl><span class=c1># &lt;/dev/null：确保输入为空。</span>
+</span></span><span class=line><span class=cl><span class=c1># 2&gt;/dev/null：将错误输出重定向到空设备，以避免显示不必要的错误信息。</span>
+</span></span><span class=line><span class=cl><span class=c1># awk &#39;/BEGIN CERTIFICATE/,/END CERTIFICATE/&#39;：使用 awk 提取从 BEGIN CERTIFICATE 到 END CERTIFICATE 的所有内容。</span>
+</span></span><span class=line><span class=cl>openssl s_client -connect example.com:443 -showcerts &lt;/dev/null 2&gt;/dev/null <span class=p>|</span> awk <span class=s1>&#39;/BEGIN CERTIFICATE/,/END CERTIFICATE/&#39;</span> &gt;&gt; full_chain.pem
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 查看完整证书链信息</span>
+</span></span><span class=line><span class=cl>openssl x509 -in full_chain.pem -text -noout
+</span></span></code></pre></td></tr></table></div></div><h1 id=随机数>随机数</h1><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 生成 16 字节的随机数（二进制），并将其保存到 random.bin 文件中，可以用于 AES-128 加密</span>
+</span></span><span class=line><span class=cl>openssl rand -out random.bin <span class=m>16</span>
+</span></span><span class=line><span class=cl><span class=c1># 生成一个 32 字节的随机密钥，适用于 AES-256 加密</span>
+</span></span><span class=line><span class=cl>openssl rand -out key.bin <span class=m>32</span>
+</span></span><span class=line><span class=cl><span class=c1># 生成一个 12 字节的随机密码，并以 Base64 编码格式输出</span>
+</span></span><span class=line><span class=cl>openssl rand -base64 <span class=m>12</span>
+</span></span><span class=line><span class=cl><span class=c1># 生成 16 字节的随机数，并以十六进制格式输出到控制台</span>
+</span></span><span class=line><span class=cl>openssl rand -hex <span class=m>16</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 生成 32 字节长度二进制随机数，字符数为 32</span>
+</span></span><span class=line><span class=cl>openssl rand <span class=m>32</span> <span class=p>|</span> wc -c <span class=c1># 32</span>
+</span></span></code></pre></td></tr></table></div></div><h1 id=rsa>RSA</h1><h2 id=rsa-公私钥生成>RSA 公私钥生成</h2><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 生成 2048 位 RSA 私钥</span>
+</span></span><span class=line><span class=cl><span class=c1># 后面数字笔试私钥位数，可以选择更长的 4096</span>
+</span></span><span class=line><span class=cl>openssl genrsa -out private_key.pem <span class=m>2048</span> <span class=c1># 简单的生成 rsa 密钥</span>
+</span></span><span class=line><span class=cl>openssl genrsa -aes256 -out private_key.pem <span class=m>2048</span> <span class=c1># 可以对密钥进行 aes-cbc-256 加密</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>openssl rsa -in encrypted_private_key.pem -out decrypted_private_key.pem <span class=c1># 去除 rsa 密钥</span>
+</span></span><span class=line><span class=cl>openssl rsa -in private_key.pem -out encrypted_private_key.pem -aes256 <span class=c1># 给 rsa 密钥对称加密</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># genpkey 可以生成很多种算法的密钥</span>
+</span></span><span class=line><span class=cl>openssl genpkey -algorithm RSA -out private_key.pem -pkeyopt rsa_keygen_bits:2048
+</span></span><span class=line><span class=cl><span class=c1># 可以生成带加密的密钥，-aes128, -aes192, -aes256, -des, -des3, -camellia256, -camellia128, -camellia192</span>
+</span></span><span class=line><span class=cl><span class=c1># 在使用密钥的地方，例如提取公钥时，会要求输入生成密钥时一样的加密密钥解密</span>
+</span></span><span class=line><span class=cl>openssl genpkey -algorithm RSA -out private_key.pem -pkeyopt rsa_keygen_bits:2048 -aes256
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 从私钥导出公钥</span>
+</span></span><span class=line><span class=cl><span class=c1># -pubout 导出公钥文件，不加导出来的仍然是私钥</span>
+</span></span><span class=line><span class=cl><span class=c1># 默认导出格式是 base64 的文本 PEM 格式，可以指定 -outform DER 指定二进制文本</span>
+</span></span><span class=line><span class=cl><span class=c1># -outform DER or PEM</span>
+</span></span><span class=line><span class=cl>openssl rsa -in private_key.pem -out public_key.pem -pubout
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 从服务器证书导出公钥</span>
+</span></span><span class=line><span class=cl><span class=c1># 导出一个网站的服务器证书</span>
+</span></span><span class=line><span class=cl><span class=nb>echo</span> <span class=p>|</span> openssl s_client -connect baidu.com:443 -servername baidu.com <span class=p>|</span> openssl x509 &gt; server.crt
+</span></span><span class=line><span class=cl><span class=c1># x509 证书中提取公钥文件</span>
+</span></span><span class=line><span class=cl>openssl x509 -in server.crt -pubkey -noout &gt; publickey.pem
+</span></span><span class=line><span class=cl><span class=c1># 打印公钥文件内容，查看信息（也可以作为校验方式）</span>
+</span></span><span class=line><span class=cl>openssl rsa -pubin -in publickey.pem -text -noout
+</span></span></code></pre></td></tr></table></div></div><h2 id=rsa-私钥加密签名-公钥验签>RSA 私钥加密签名, 公钥验签</h2><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 生成私钥</span>
+</span></span><span class=line><span class=cl>openssl genpkey -algorithm RSA -out private_key.pem -pkeyopt rsa_keygen_bits:2048
+</span></span><span class=line><span class=cl><span class=c1># 从私钥中提取公钥</span>
+</span></span><span class=line><span class=cl>openssl rsa -pubout -in private_key.pem -out public_key.pem
+</span></span><span class=line><span class=cl><span class=c1># 生成待加密文件</span>
+</span></span><span class=line><span class=cl><span class=nb>echo</span> <span class=s2>&#34;这是一个需要加密的消息。&#34;</span> &gt; message.txt
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 私钥签名</span>
+</span></span><span class=line><span class=cl>openssl dgst -sha256 -sign private_key.pem -out signature.bin message.txt
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 公钥验签</span>
+</span></span><span class=line><span class=cl>openssl dgst -sha256 -verify public_key.pem -signature signature.bin message.txt
+</span></span></code></pre></td></tr></table></div></div><h2 id=rsa-公钥加密-私钥解密>RSA 公钥加密, 私钥解密</h2><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 生成私钥</span>
+</span></span><span class=line><span class=cl>openssl genpkey -algorithm RSA -out private_key.pem -pkeyopt rsa_keygen_bits:2048
+</span></span><span class=line><span class=cl><span class=c1># 从私钥中提取公钥</span>
+</span></span><span class=line><span class=cl>openssl rsa -pubout -in private_key.pem -out public_key.pem
+</span></span><span class=line><span class=cl><span class=c1># 生成待加密文件</span>
+</span></span><span class=line><span class=cl><span class=nb>echo</span> <span class=s2>&#34;这是一个需要加密的消息。&#34;</span> &gt; message.txt
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 公钥加密</span>
+</span></span><span class=line><span class=cl>openssl rsautl -encrypt -inkey public_key.pem -pubin -in message.txt -out encrypted_message.bin
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 私钥解密</span>
+</span></span><span class=line><span class=cl>openssl rsautl -decrypt -inkey private_key.pem -in encrypted_message.bin -out decrypted_message.txt
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 比对解密文件和原文件</span>
+</span></span><span class=line><span class=cl>cmp message.txt decrypted_message.txt
+</span></span><span class=line><span class=cl>diff message.txt decrypted_message.txt
+</span></span><span class=line><span class=cl>md5sum message.txt decrypted_message.txt
+</span></span></code></pre></td></tr></table></div></div><h1 id=x509-证书相关操作>X.509 证书相关操作</h1><p>在 X.509 证书中，<code>subject</code>是指证书的主题信息，通常包括以下几个部分：</p><ol><li><code>C</code>：国家代码（Country Name）</li><li><code>ST</code>：省份或州代码（State or Province Name）</li><li><code>L</code>：城市或地区代码（Locality Name）</li><li><code>O</code>：组织名称（Organization Name）</li><li><code>OU</code>：组织单位名称（Organizational Unit Name）</li><li><code>CN</code>：通用名称（Common Name）</li><li><code>emailAddress</code>：电子邮件地址（Email Address）</li></ol><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># subject 字符串</span>
+</span></span><span class=line><span class=cl>/C<span class=o>=</span>CN/ST<span class=o>=</span>Beijing/L<span class=o>=</span>Beijing/O<span class=o>=</span>Example/CN<span class=o>=</span>example.com/emailAddress<span class=o>=</span>info@example.com
+</span></span></code></pre></td></tr></table></div></div><h2 id=der-和-pem-格式转换>DER 和 PEM 格式转换</h2><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># PEM 转 DER</span>
+</span></span><span class=line><span class=cl>openssl x509 -in mycert.pem -outform DER -out mycert.der
+</span></span><span class=line><span class=cl><span class=c1># DER 转 PEM</span>
+</span></span><span class=line><span class=cl>openssl x509 -in mycert.der -inform DER -outform PEM -out mycert.pem
+</span></span></code></pre></td></tr></table></div></div><h2 id=几种提取公钥的方法>几种提取公钥的方法</h2><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 1. 从 RSA 私钥中提取公钥</span>
+</span></span><span class=line><span class=cl><span class=c1># -pubout 提取公钥</span>
+</span></span><span class=line><span class=cl>openssl rsa -pubout -in private_key.pem -out public_key.pem
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 2. 从 CSR（证书签名请求）中提取公钥</span>
+</span></span><span class=line><span class=cl><span class=c1># -noout 不打印出 CSR 原文</span>
+</span></span><span class=line><span class=cl><span class=c1># -pubkey 提取公钥（创建该 CSR 的服务器私钥对应的公钥</span>
+</span></span><span class=line><span class=cl>openssl req -in server.csr -noout -pubkey &gt; public_key.pem
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 3. 从 X.509 证书中提取公钥</span>
+</span></span><span class=line><span class=cl><span class=c1># -pubkey 提取公钥（创建该证书的服务器私钥对应的公钥</span>
+</span></span><span class=line><span class=cl>openssl x509 -in server.crt -noout -pubkey &gt; public_key.pem
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 4. 从 PKCS#12 文件中提取公钥</span>
+</span></span><span class=line><span class=cl><span class=c1># 先将 p12 提取不带证书的私钥</span>
+</span></span><span class=line><span class=cl>openssl pkcs12 -in your_file.p12 -nocerts -out private_key.pem
+</span></span><span class=line><span class=cl><span class=c1># 再将该私钥提取公钥</span>
+</span></span><span class=line><span class=cl>openssl rsa -in private_key.pem -pubout
+</span></span></code></pre></td></tr></table></div></div><h2 id=私钥生成自签名证书>私钥生成自签名证书</h2><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 生成私钥</span>
+</span></span><span class=line><span class=cl>openssl genrsa -out private_key.pem <span class=m>2048</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 创建 CSR 证书请求，会依次填写以下信息</span>
+</span></span><span class=line><span class=cl><span class=c1># CA 证书 Common Name 需要保证唯一性，不要与服务端证书或者客户端证书的 Common Name 相同</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># Country Name (2 letter code) [XX]:cn</span>
+</span></span><span class=line><span class=cl><span class=c1># State or Province Name (full name) []:bj</span>
+</span></span><span class=line><span class=cl><span class=c1># Locality Name (eg, city) [Default City]:bj</span>
+</span></span><span class=line><span class=cl><span class=c1># Organization Name (eg, company) [Default Company Ltd]:alibaba</span>
+</span></span><span class=line><span class=cl><span class=c1># Organizational Unit Name (eg, section) []:test</span>
+</span></span><span class=line><span class=cl><span class=c1># Common Name (eg, your name or your servers hostname) []:root</span>
+</span></span><span class=line><span class=cl><span class=c1># Email Address []:a.alibaba.com</span>
+</span></span><span class=line><span class=cl><span class=c1># A challenge password []:</span>
+</span></span><span class=line><span class=cl><span class=c1># An optional company name []:</span>
+</span></span><span class=line><span class=cl>openssl req -new -key private_key.pem -out csr.pem
+</span></span><span class=line><span class=cl><span class=c1># 查看 CSR 证书信息</span>
+</span></span><span class=line><span class=cl>openssl req -in csr.pem -noout -text
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 生成自签名证书</span>
+</span></span><span class=line><span class=cl><span class=c1># openssl x509 不指定 -CA 和 -CAkey, 额外添加 -signkey 指定一个密钥，即可完成无 CA 的自签名证书</span>
+</span></span><span class=line><span class=cl>openssl x509 -req -days <span class=m>365</span> -in csr.pem -signkey private_key.pem -out certificate.pem
+</span></span><span class=line><span class=cl><span class=c1># 或者直接用 subj 代替 csr</span>
+</span></span><span class=line><span class=cl><span class=c1># -subj 直接用私钥签发证书，跳过 CSR 创建（subject 表达式包含 CSR 所有内容）</span>
+</span></span><span class=line><span class=cl>openssl req -new -x509 -key private_key.pem -out certificate.pem -days <span class=m>365</span> -subj <span class=s2>&#34;/C=CN/ST=Beijing/L=Beijing/O=My Company/CN=example.com&#34;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 查看证书信息</span>
+</span></span><span class=line><span class=cl>openssl x509 -in certificate.pem -text -noout
+</span></span></code></pre></td></tr></table></div></div><h3 id=自签名证书的两种方式对比>自签名证书的两种方式对比</h3><p>使用 <code>openssl x509</code> 签发证书，需要输入 CSR 文件，其生成的证书版本为 Version 1，少了 X509v3 的额外标识；（openssl 3.0 以上版本默认生成
+X509v3</p><p>使用 <code>openssl req</code> 签发证书，可以用 <code>-subj</code> 替代 CSR 文件，其证书版本为 X509v3，有额外的标识信息；</p><p><img src=/post/openssl-and-x509-certificate-related/image1.png width=2562 height=1778 srcset="/post/openssl-and-x509-certificate-related/image1_hu_eb3b4c239563c5d1.png 480w, /post/openssl-and-x509-certificate-related/image1_hu_cf4ddddf2071e9e.png 1024w" loading=lazy alt=自签名证书的两种方式对比 class=gallery-image data-flex-grow=144 data-flex-basis=345px></p><h3 id=快速生成证书和密钥>快速生成证书和密钥</h3><p>这种方式一般可以快速生成 CA 证书及其密钥；</p><p>不适用于 CA 签发的证书，因为 CA 签发证书需要用 <code>openssl x509</code>，需要指定 CSR 文件，而不能用 <code>-subj</code> 替代 CSR，另外
+<code>openssl req</code> 也没有 <code>-CA</code> <code>-CAKey</code> 选项；只能单独生成 CSR 文件，用 <code>openssl x509</code> 签发证书；</p><p>使用 <code>openssl req</code> 默认生成 <code>-keyout</code> 的密钥文件是带加密的 <code>pkcs#8</code>，可以用 <code>openssl rsa</code> 转为 <code>pkcs#1</code> 非加密密钥；也可以执行时添加
+<code>-nodes</code>，直接生成不加密密钥</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 根据 -subj 内容签发证书，密钥自动生成</span>
+</span></span><span class=line><span class=cl><span class=c1># -nodes，表示生成的密钥是原密钥，不带对称加密，否则需要手动输入对称加密密钥, openssl v3.0 替换为 -noenc</span>
+</span></span><span class=line><span class=cl><span class=c1># -newkey rsa:2048，表示生成的密钥为 RSA 密钥，2048 位，同样支持 1024, 3072, 4096, 8192 等</span>
+</span></span><span class=line><span class=cl><span class=c1># -keyout, 指定输出的密钥文件</span>
+</span></span><span class=line><span class=cl><span class=c1># -out, 指定签发的证书文件</span>
+</span></span><span class=line><span class=cl><span class=c1># -days, 指定有效期，开始时间从签发时刻算起</span>
+</span></span><span class=line><span class=cl>openssl req -x509 -new -nodes -keyout rootCA.key -out rootCA.pem -days <span class=m>365</span> -subj <span class=s2>&#34;/CN=Root CA&#34;</span> -newkey rsa:2048
+</span></span></code></pre></td></tr></table></div></div><p><strong>openssl 3.0</strong> 以上版本，<code>openssl req</code> 可以附加 <code>-CA</code> 和 <code>-CAKey</code> 选项，实现快速 CA 签发证书</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>openssl req -x509 -new -nodes -keyout server.key -out server.crt -days <span class=m>365</span> -subj <span class=s2>&#34;/CN=server.example.com&#34;</span> -CA rootCA.pem -CAkey rootCA.key
+</span></span></code></pre></td></tr></table></div></div><p><strong>openssl 3.0</strong> 以上，可以设置证书有效期起始时间和终止时间 <code>-not_before</code> <code>-not_after</code> ，日期格式为 <code>YYYYMMDDHHMMSSZ</code>，其中
+<code>Z</code>表示 UTC 时区。<code>-not_after</code> 会将 <code>-days</code> 覆盖失效；如果只用 <code>-not_before</code> 和 <code>-days</code> ，终止时间是从执行命令开始计算 +
+days 天的时间，而不是起始时间开始追加；</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>openssl req -x509 -new -nodes -keyout server.key -out server.crt -subj <span class=s2>&#34;/CN=server.example.com&#34;</span> -CA rootCA.pem -CAkey rootCA.key -not_before 20060102150405Z -not_after 20250102150405Z
+</span></span></code></pre></td></tr></table></div></div><h2 id=校验私钥与证书是否匹配>校验私钥与证书是否匹配</h2><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 生成自签名证书</span>
+</span></span><span class=line><span class=cl>openssl genrsa -out server.key <span class=m>2048</span>
+</span></span><span class=line><span class=cl>openssl req -new -x509 -key server.key -out server.crt -days <span class=m>365</span> -subj <span class=s2>&#34;/C=CN/ST=Beijing/L=Beijing/O=My Company/CN=example.com&#34;</span>
+</span></span><span class=line><span class=cl><span class=c1># 计算证书和私钥的模数，相等则匹配</span>
+</span></span><span class=line><span class=cl>openssl x509 -in server.crt -noout -modulus <span class=p>|</span> openssl md5
+</span></span><span class=line><span class=cl>openssl rsa -in server.key -noout -modulus <span class=p>|</span> openssl md5
+</span></span></code></pre></td></tr></table></div></div><h2 id=ca-签发证书>CA 签发证书</h2><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 快速生成根证书和密钥</span>
+</span></span><span class=line><span class=cl>openssl req -x509 -new -nodes -keyout rootCA.key -out rootCA.pem -days <span class=m>365</span> -subj <span class=s2>&#34;/CN=Root CA&#34;</span> -newkey rsa:2048
+</span></span><span class=line><span class=cl><span class=c1># 生成服务器密钥和 CSR</span>
+</span></span><span class=line><span class=cl>openssl genrsa -out server.key <span class=m>2048</span>
+</span></span><span class=line><span class=cl>openssl req -new -key server.key -out server.csr -subj <span class=s2>&#34;/CN=Server&#34;</span>
+</span></span><span class=line><span class=cl><span class=c1># 验证 CSR</span>
+</span></span><span class=line><span class=cl>openssl req -in server.csr -noout -text
+</span></span><span class=line><span class=cl><span class=c1># 使用根证书签署服务器证书</span>
+</span></span><span class=line><span class=cl><span class=c1># -CAcreateserial, 生成一个序列号并将其写入一个名为 serial 的文件</span>
+</span></span><span class=line><span class=cl>openssl x509 -req -in server.csr -CA rootCA.pem -CAkey rootCA.key -CAcreateserial -out server.crt -days <span class=m>365</span>
+</span></span><span class=line><span class=cl><span class=c1># 验证证书</span>
+</span></span><span class=line><span class=cl>openssl x509 -in server.crt -noout -text
+</span></span><span class=line><span class=cl><span class=c1># 用 CA 证书验证服务器证书</span>
+</span></span><span class=line><span class=cl>openssl verify -CAfile rootCA.pem server.crt
+</span></span></code></pre></td></tr></table></div></div><blockquote><p>使用 CA 签发证书不能使用上述「快速生成证书和密钥」，因为需要用到 CSR 文件，因此需要单独生成密钥和 CSR</p></blockquote><h3 id=ca签发证书与自签名证书不同点>CA签发证书与自签名证书不同点</h3><ul><li>自签名证书的 Issuer 颁发者也是自己</li><li>CA 签发证书的 Issuer 是 CA</li></ul><p><img src=/post/openssl-and-x509-certificate-related/image2.png width=2428 height=576 srcset="/post/openssl-and-x509-certificate-related/image2_hu_46654d30facbfd37.png 480w, /post/openssl-and-x509-certificate-related/image2_hu_a7e4943faa2f5df.png 1024w" loading=lazy alt="CA 签发证书与自签名证书不同点" class=gallery-image data-flex-grow=421 data-flex-basis=1011px></p><h2 id=使用配置文件创建-csr-和-x509-证书>使用配置文件创建 CSR 和 X509 证书</h2><p>配置文件的创建方式较为麻烦，但是提供更加精细化的定制配置，一般来说以上的创建方式足够自签名使用，无需配置文件方式创建；</p><h3 id=配置文件创建-csr>配置文件创建 CSR</h3><p>创建 <code>csr.cnf</code> 文件</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 配置文件用于生成 CSR</span>
+</span></span><span class=line><span class=cl><span class=o>[</span> req <span class=o>]</span>
+</span></span><span class=line><span class=cl><span class=nv>default_bits</span>        <span class=o>=</span> <span class=m>2048</span>           <span class=c1># 密钥长度，常见值：2048(常用), 3072, 4096</span>
+</span></span><span class=line><span class=cl><span class=nv>default_keyfile</span>     <span class=o>=</span> server.key     <span class=c1># 生成的私钥文件名</span>
+</span></span><span class=line><span class=cl><span class=nv>default_md</span>          <span class=o>=</span> sha256         <span class=c1># 签名哈希算法，推荐使用 SHA256(常用), SHA384, SHA512</span>
+</span></span><span class=line><span class=cl><span class=nv>prompt</span>              <span class=o>=</span> no             <span class=c1># 是否交互式输入信息</span>
+</span></span><span class=line><span class=cl><span class=nv>distinguished_name</span>  <span class=o>=</span> req_distinguished_name  <span class=c1># 指定主体字段的配置部分</span>
+</span></span><span class=line><span class=cl><span class=nv>req_extensions</span>      <span class=o>=</span> req_ext        <span class=c1># CSR 的扩展部分，引用 [req_ext]</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=o>[</span> req_distinguished_name <span class=o>]</span>
+</span></span><span class=line><span class=cl><span class=nv>C</span>                   <span class=o>=</span> CN             <span class=c1># 国家代码（两位字母，如 CN、US）</span>
+</span></span><span class=line><span class=cl><span class=nv>ST</span>                  <span class=o>=</span> Beijing        <span class=c1># 州或省份</span>
+</span></span><span class=line><span class=cl><span class=nv>L</span>                   <span class=o>=</span> Beijing        <span class=c1># 城市</span>
+</span></span><span class=line><span class=cl><span class=nv>O</span>                   <span class=o>=</span> ExampleCorp    <span class=c1># 组织名称</span>
+</span></span><span class=line><span class=cl><span class=nv>OU</span>                  <span class=o>=</span> IT Department  <span class=c1># 组织单元</span>
+</span></span><span class=line><span class=cl><span class=nv>CN</span>                  <span class=o>=</span> example.com    <span class=c1># 通用名称（域名或 IP 地址）</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=o>[</span> req_ext <span class=o>]</span>
+</span></span><span class=line><span class=cl><span class=nv>subjectAltName</span>      <span class=o>=</span> @alt_names     <span class=c1># 引用 [alt_names] 定义 SAN 扩展</span>
+</span></span><span class=line><span class=cl><span class=nv>basicConstraints</span>    <span class=o>=</span> critical,CA:TRUE,pathlen:0 <span class=c1># 基本约束</span>
+</span></span><span class=line><span class=cl><span class=nv>keyUsage</span>            <span class=o>=</span> critical, digitalSignature, keyEncipherment <span class=c1># 公钥用途</span>
+</span></span><span class=line><span class=cl><span class=nv>extendedKeyUsage</span>    <span class=o>=</span> serverAuth, clientAuth <span class=c1># 扩展用途</span>
+</span></span><span class=line><span class=cl><span class=nv>subjectKeyIdentifier</span> <span class=o>=</span> <span class=nb>hash</span> <span class=c1># 主题密钥标识符</span>
+</span></span><span class=line><span class=cl><span class=nv>crlDistributionPoints</span> <span class=o>=</span> @disribution_points <span class=c1># CRL 分发点</span>
+</span></span><span class=line><span class=cl><span class=nv>certificatePolicies</span> <span class=o>=</span> 1.3.6.1.4.1.12345.1.1.1, 1.2.3.4.5.6.7.8.9.1 <span class=c1># 证书策略</span>
+</span></span><span class=line><span class=cl><span class=nv>authorityInfoAccess</span> <span class=o>=</span> OCSP<span class=p>;</span>URI:http://ocsp.example.com/, caIssuers<span class=p>;</span>URI:http://myca.example.com/ca.cer <span class=c1># 授权信息访问</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=o>[</span> alt_names <span class=o>]</span>
+</span></span><span class=line><span class=cl>DNS.1               <span class=o>=</span> example.com    <span class=c1># 替代名称：域名</span>
+</span></span><span class=line><span class=cl>DNS.2               <span class=o>=</span> www.example.com <span class=c1># 替代名称：子域名</span>
+</span></span><span class=line><span class=cl>IP.1                <span class=o>=</span> 192.168.1.1    <span class=c1># 替代名称：IP 地址</span>
+</span></span><span class=line><span class=cl><span class=nv>email</span>               <span class=o>=</span> info@example.com <span class=c1># 替代名称：邮箱</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=o>[</span> disribution_points <span class=o>]</span>
+</span></span><span class=line><span class=cl><span class=nv>URI</span>                 <span class=o>=</span> http://crl.example.com/crl.pem
+</span></span></code></pre></td></tr></table></div></div><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span><span class=lnt>8
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 生成根证书和密钥</span>
+</span></span><span class=line><span class=cl>openssl req -x509 -new -nodes -keyout rootCA.key -out rootCA.pem -days <span class=m>365</span> -subj <span class=s2>&#34;/CN=Root CA&#34;</span> -newkey rsa:2048
+</span></span><span class=line><span class=cl><span class=c1># 生成服务器私钥和 CSR 文件</span>
+</span></span><span class=line><span class=cl><span class=c1># -nodes，生成不加密的服务器密钥</span>
+</span></span><span class=line><span class=cl><span class=c1># -config 指定 CSR 配置文件</span>
+</span></span><span class=line><span class=cl>openssl req -new -nodes -config csr.cnf -out server.csr
+</span></span><span class=line><span class=cl><span class=c1># 查看 CSR 内容</span>
+</span></span><span class=line><span class=cl>openssl req -in server.csr -noout -text
+</span></span></code></pre></td></tr></table></div></div><p>CSR 内容：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>Subject: <span class=nv>C</span><span class=o>=</span>CN, <span class=nv>ST</span><span class=o>=</span>Beijing, <span class=nv>L</span><span class=o>=</span>Beijing, <span class=nv>O</span><span class=o>=</span>ExampleCorp, <span class=nv>OU</span><span class=o>=</span>IT Department, <span class=nv>CN</span><span class=o>=</span>example.com
+</span></span><span class=line><span class=cl>...
+</span></span><span class=line><span class=cl>Requested Extensions:
+</span></span><span class=line><span class=cl>    X509v3 Subject Alternative Name: 
+</span></span><span class=line><span class=cl>        DNS:example.com, DNS:www.example.com, IP Address:192.168.1.1, email:info@example.com
+</span></span><span class=line><span class=cl>    X509v3 Basic Constraints: critical
+</span></span><span class=line><span class=cl>        CA:TRUE, pathlen:0
+</span></span><span class=line><span class=cl>    X509v3 Key Usage: critical
+</span></span><span class=line><span class=cl>        Digital Signature, Key Encipherment
+</span></span><span class=line><span class=cl>    X509v3 Extended Key Usage: 
+</span></span><span class=line><span class=cl>        TLS Web Server Authentication, TLS Web Client Authentication
+</span></span><span class=line><span class=cl>    X509v3 Subject Key Identifier: 
+</span></span><span class=line><span class=cl>        73:80:FD:8E:8F:D0:7E:4E:CB:87:A2:DC:60:44:4B:4F:66:70:73:5A
+</span></span><span class=line><span class=cl>    X509v3 CRL Distribution Points: 
+</span></span><span class=line><span class=cl>        Full Name:
+</span></span><span class=line><span class=cl>          URI:http://crl.example.com/crl.pem
+</span></span><span class=line><span class=cl>    X509v3 Certificate Policies: 
+</span></span><span class=line><span class=cl>        Policy: 1.3.6.1.4.1.12345.1.1.1
+</span></span><span class=line><span class=cl>        Policy: 1.2.3.4.5.6.7.8.9.1
+</span></span><span class=line><span class=cl>    Authority Information Access: 
+</span></span><span class=line><span class=cl>        OCSP - URI:http://ocsp.example.com/
+</span></span><span class=line><span class=cl>        CA Issuers - URI:http://myca.example.com/ca.cer
+</span></span></code></pre></td></tr></table></div></div><blockquote><p>注：该 CSR 里的扩展内容 Requested Extensions，直接应用到 X509 证书签发时，不会直接应用到证书中；例如 CSR 虽然配置了 SAN，但是
+X509 证书是没有的，必须在签发 X509 证书时显式指定出来</p></blockquote><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 使用根证书签署服务器证书</span>
+</span></span><span class=line><span class=cl>openssl x509 -req -in server.csr -CA rootCA.pem -CAkey rootCA.key -CAcreateserial -out server.crt -days <span class=m>365</span>
+</span></span><span class=line><span class=cl><span class=c1># 验证证书</span>
+</span></span><span class=line><span class=cl>openssl x509 -in server.crt -noout -text
+</span></span><span class=line><span class=cl><span class=c1># 用 CA 证书验证服务器证书</span>
+</span></span><span class=line><span class=cl>openssl verify -CAfile rootCA.pem server.crt
+</span></span></code></pre></td></tr></table></div></div><p>实际只有基础项，而不具有扩展内容</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>X509v3 extensions:
+</span></span><span class=line><span class=cl>    X509v3 Subject Key Identifier: 
+</span></span><span class=line><span class=cl>        73:80:FD:8E:8F:D0:7E:4E:CB:87:A2:DC:60:44:4B:4F:66:70:73:5A
+</span></span><span class=line><span class=cl>    X509v3 Authority Key Identifier: 
+</span></span><span class=line><span class=cl>        30:7B:AA:31:4F:DA:F0:F4:22:22:6B:E9:96:C4:BF:A5:84:10:DB:03
+</span></span></code></pre></td></tr></table></div></div><h3 id=配置文件创建-x509-证书>配置文件创建 X509 证书</h3><p>创建 X509v3 配置文件 <code>v3.ext</code></p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span><span class=lnt>44
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 配置文件用于签发证书时的扩展设置</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># CA 证书扩展</span>
+</span></span><span class=line><span class=cl><span class=o>[</span> v3_ca <span class=o>]</span>
+</span></span><span class=line><span class=cl><span class=nv>authorityKeyIdentifier</span> <span class=o>=</span> keyid:always,issuer  <span class=c1># 授权密钥标识符</span>
+</span></span><span class=line><span class=cl><span class=nv>basicConstraints</span>       <span class=o>=</span> critical,CA:TRUE,pathlen:1  <span class=c1># 标记为 CA，限制链长度</span>
+</span></span><span class=line><span class=cl><span class=nv>keyUsage</span>               <span class=o>=</span> critical, digitalSignature, keyCertSign, cRLSign  <span class=c1># 密钥用途</span>
+</span></span><span class=line><span class=cl><span class=nv>subjectKeyIdentifier</span>   <span class=o>=</span> <span class=nb>hash</span>  <span class=c1># 主题密钥标识符</span>
+</span></span><span class=line><span class=cl><span class=nv>nameConstraints</span>        <span class=o>=</span> permitted<span class=p>;</span>email:.example.com<span class=p>;</span>DNS:.example.com  <span class=c1># 名称约束</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 服务器证书扩展</span>
+</span></span><span class=line><span class=cl><span class=o>[</span> v3_server <span class=o>]</span>
+</span></span><span class=line><span class=cl><span class=nv>authorityKeyIdentifier</span> <span class=o>=</span> keyid,issuer  <span class=c1># 授权密钥标识符</span>
+</span></span><span class=line><span class=cl><span class=nv>subjectKeyIdentifier</span>   <span class=o>=</span> <span class=nb>hash</span> <span class=c1># 主题密钥标识符</span>
+</span></span><span class=line><span class=cl><span class=nv>basicConstraints</span>       <span class=o>=</span> critical,CA:FALSE  <span class=c1># 标记为非 CA 证书</span>
+</span></span><span class=line><span class=cl><span class=nv>keyUsage</span>               <span class=o>=</span> critical, digitalSignature, keyEncipherment  <span class=c1># 密钥用途</span>
+</span></span><span class=line><span class=cl><span class=nv>extendedKeyUsage</span>       <span class=o>=</span> serverAuth,clientAuth  <span class=c1># 扩展密钥用途，标记为服务器认证和客户端认证</span>
+</span></span><span class=line><span class=cl><span class=nv>subjectAltName</span>         <span class=o>=</span> DNS:example.com, DNS:www.example.com, IP:192.168.1.1, email:info@example.com  <span class=c1># SAN 扩展</span>
+</span></span><span class=line><span class=cl><span class=nv>crlDistributionPoints</span>  <span class=o>=</span> URI:http://example.com/crl.pem  <span class=c1># CRL 分发点</span>
+</span></span><span class=line><span class=cl><span class=nv>certificatePolicies</span>    <span class=o>=</span> 1.3.6.1.4.1.12345.1.1.1, 1.2.3.4.5.6.7.8.9.1 <span class=c1># 证书策略</span>
+</span></span><span class=line><span class=cl><span class=nv>authorityInfoAccess</span>    <span class=o>=</span> OCSP<span class=p>;</span>URI:http://ocsp.example.com/, caIssuers<span class=p>;</span>URI:http://myca.example.com/ca.cer <span class=c1># 授权信息访问</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 客户端证书扩展</span>
+</span></span><span class=line><span class=cl><span class=o>[</span> v3_client <span class=o>]</span>
+</span></span><span class=line><span class=cl><span class=nv>authorityKeyIdentifier</span> <span class=o>=</span> keyid,issuer
+</span></span><span class=line><span class=cl><span class=nv>basicConstraints</span>       <span class=o>=</span> CA:FALSE
+</span></span><span class=line><span class=cl><span class=nv>keyUsage</span>               <span class=o>=</span> critical, digitalSignature, keyEncipherment
+</span></span><span class=line><span class=cl><span class=nv>extendedKeyUsage</span>       <span class=o>=</span> clientAuth  <span class=c1># 客户端认证用途</span>
+</span></span><span class=line><span class=cl><span class=nv>subjectAltName</span>         <span class=o>=</span> email:client@example.com
+</span></span><span class=line><span class=cl><span class=nv>nsComment</span>              <span class=o>=</span> <span class=s2>&#34;OpenSSL Generated Certificate&#34;</span>  <span class=c1># 注释</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># OCSP 证书扩展</span>
+</span></span><span class=line><span class=cl><span class=o>[</span> v3_ocsp <span class=o>]</span>
+</span></span><span class=line><span class=cl><span class=nv>authorityKeyIdentifier</span> <span class=o>=</span> keyid,issuer
+</span></span><span class=line><span class=cl><span class=nv>basicConstraints</span>       <span class=o>=</span> CA:FALSE
+</span></span><span class=line><span class=cl><span class=nv>keyUsage</span>               <span class=o>=</span> critical, digitalSignature
+</span></span><span class=line><span class=cl><span class=nv>extendedKeyUsage</span>       <span class=o>=</span> OCSPSigning  <span class=c1># OCSP 签名用途</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 时间戳证书扩展</span>
+</span></span><span class=line><span class=cl><span class=o>[</span> v3_timestamp <span class=o>]</span>
+</span></span><span class=line><span class=cl><span class=nv>authorityKeyIdentifier</span> <span class=o>=</span> keyid,issuer
+</span></span><span class=line><span class=cl><span class=nv>basicConstraints</span>       <span class=o>=</span> CA:FALSE
+</span></span><span class=line><span class=cl><span class=nv>keyUsage</span>               <span class=o>=</span> critical, digitalSignature
+</span></span><span class=line><span class=cl><span class=nv>extendedKeyUsage</span>       <span class=o>=</span> timeStamping  <span class=c1># 时间戳用途</span>
+</span></span></code></pre></td></tr></table></div></div><p>延续上方示例，生成 <code>rootCA.pem</code>, <code>rootCA.key</code>, <code>server.csr</code>；</p><p>使用配置文件的方式，创建 CA 签发的服务器 X509v3 证书</p><p>在根证书签发服务器证书基础上，添加 <code>-extfile</code> 指定以上配置文件，同时 <code>-extensions</code> 指定对应的证书扩展项名，如服务器证书扩展是
+<code>v3_server</code>，名字可以自定义；如果该配置文件平铺，不归类，类似 <code>properties</code> 配置文件形式，则可以忽略 <code>-extensions</code></p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># -extfile 指定 x509v3 配置文件</span>
+</span></span><span class=line><span class=cl>openssl x509 -req -in server.csr -CA rootCA.pem -CAkey rootCA.key -CAcreateserial <span class=se>\
+</span></span></span><span class=line><span class=cl><span class=se></span>    -out server.crt -days <span class=m>365</span> -extfile v3.ext -extensions v3_server
+</span></span><span class=line><span class=cl><span class=c1># CA 验证证书</span>
+</span></span><span class=line><span class=cl>openssl verify -CAfile rootCA.pem server.crt
+</span></span></code></pre></td></tr></table></div></div><p>证书扩展内容：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>X509v3 extensions:
+</span></span><span class=line><span class=cl>    X509v3 Subject Key Identifier: 
+</span></span><span class=line><span class=cl>        73:80:FD:8E:8F:D0:7E:4E:CB:87:A2:DC:60:44:4B:4F:66:70:73:5A
+</span></span><span class=line><span class=cl>    X509v3 Authority Key Identifier: 
+</span></span><span class=line><span class=cl>        30:7B:AA:31:4F:DA:F0:F4:22:22:6B:E9:96:C4:BF:A5:84:10:DB:03
+</span></span><span class=line><span class=cl>    X509v3 Basic Constraints: critical
+</span></span><span class=line><span class=cl>        CA:FALSE
+</span></span><span class=line><span class=cl>    X509v3 Key Usage: critical
+</span></span><span class=line><span class=cl>        Digital Signature, Key Encipherment
+</span></span><span class=line><span class=cl>    X509v3 Extended Key Usage: 
+</span></span><span class=line><span class=cl>        TLS Web Server Authentication, TLS Web Client Authentication
+</span></span><span class=line><span class=cl>    X509v3 Subject Alternative Name: 
+</span></span><span class=line><span class=cl>        DNS:example.com, DNS:www.example.com, IP Address:192.168.1.1, email:info@example.com
+</span></span><span class=line><span class=cl>    X509v3 CRL Distribution Points: 
+</span></span><span class=line><span class=cl>        Full Name:
+</span></span><span class=line><span class=cl>          URI:http://example.com/crl.pem
+</span></span><span class=line><span class=cl>    X509v3 Certificate Policies: 
+</span></span><span class=line><span class=cl>        Policy: 1.3.6.1.4.1.12345.1.1.1
+</span></span><span class=line><span class=cl>        Policy: 1.2.3.4.5.6.7.8.9.1
+</span></span><span class=line><span class=cl>    Authority Information Access: 
+</span></span><span class=line><span class=cl>        OCSP - URI:http://ocsp.example.com/
+</span></span><span class=line><span class=cl>        CA Issuers - URI:http://myca.example.com/ca.cer
+</span></span></code></pre></td></tr></table></div></div><p>其他类型证书同理，只需要修改 <code>-extensions</code> 找到对应分组即可，或单独创建配置文件</p><h2 id=x509v3-扩展参数>X509v3 扩展参数</h2><p>X.509 v3 证书通过扩展字段增加功能和灵活性，以下是常见的扩展：</p><details><summary>Basic Constraints: 指示证书的基本约束</summary><ul><li><strong>CA（Certificate Authority）</strong>：指示该证书是否可以用作证书颁发机构的证书。如果设置为 <code>CA:TRUE</code>，则表示该证书可以用于签发其他证书；如果设置为
+<code>CA:FALSE</code>，则表示该证书不能用于签发其他证书。</li><li><strong>路径长度限制（Path Length Constraint）</strong>：这是一个可选的整数值，表示从该证书开始的证书链中，最多可以有多少个中间 CA 证书（该
+CA 证书允许签发证书数上限）。如果没有设置路径长度限制，则表示没有限制。</li><li>当 <code>basicConstraints</code> 被标记为 <code>critical</code> 时，表示该扩展是关键的，必须被所有使用该证书的应用程序理解。如果应用程序不支持或不理解这个扩展，它应该拒绝使用该证书。这意味着
+<code>basicConstraints</code> 的存在和内容对于证书的正确使用是至关重要的。</li></ul><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=nv>basicConstraints</span> <span class=o>=</span> critical,CA:FALSE,pathlen:2
+</span></span></code></pre></td></tr></table></div></div><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>X509v3 extensions:
+</span></span><span class=line><span class=cl>    X509v3 Basic Constraints: critical
+</span></span><span class=line><span class=cl>        CA:FALSE, pathlen:2
+</span></span></code></pre></td></tr></table></div></div></details><details><summary>Key Usage: 定义公钥的用途，如签名、加密或密钥协商等</summary><ul><li><strong>digitalSignature</strong>: 允许使用该公钥进行数字签名，例如用于身份验证和数据完整性。(常用</li><li><strong>nonRepudiation</strong>: 允许使用该公钥进行不可否认性签名，通常用于证明某个操作的真实性。</li><li><strong>keyEncipherment</strong>: 允许使用该公钥加密密钥，例如在 SSL/TLS 中用于加密会话密钥。（常用</li><li><strong>dataEncipherment</strong>: 允许使用该公钥加密数据。</li><li><strong>keyAgreement</strong>: 允许使用该公钥进行密钥协商，例如在 Diffie-Hellman 密钥交换中。</li><li><strong>keyCertSign</strong>: 允许使用该公钥签署证书。（通常用于 CA 证书</li><li><strong>cRLSign</strong>: 允许使用该公钥签署证书撤销列表 (CRL)。（通常用于 CA 证书</li><li><strong>encipherOnly</strong>: 仅允许使用该公钥进行加密操作，通常用于密钥协商。</li><li><strong>decipherOnly</strong>: 仅允许使用该公钥进行解密操作，通常用于密钥协商。</li></ul><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=nv>keyUsage</span> <span class=o>=</span> critical, digitalSignature, keyEncipherment
+</span></span></code></pre></td></tr></table></div></div><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>X509v3 Key Usage: critical
+</span></span><span class=line><span class=cl>        Digital Signature, Key Encipherment
+</span></span></code></pre></td></tr></table></div></div></details><details><summary>Extended Key Usage (EKU): 进一步定义证书中公钥的特定用途</summary><ul><li><strong>serverAuth</strong>: 允许证书用于服务器身份验证，通常用于 SSL/TLS 服务器证书。(常用</li><li><strong>clientAuth</strong>: 允许证书用于客户端身份验证，通常用于 SSL/TLS 客户端证书。(常用</li><li><strong>codeSigning</strong>: 允许证书用于代码签名，确保软件的完整性和来源。</li><li><strong>emailProtection</strong>: 允许证书用于电子邮件保护，通常用于 S/MIME 电子邮件加密和签名。</li><li><strong>timeStamping</strong>: 允许证书用于时间戳服务，确保数据在特定时间点的存在性。</li><li><strong>OCSPSigning</strong>: 允许证书用于在线证书状态协议 (OCSP) 签名，通常用于证书状态检查。</li><li><strong>ipsecEndSystem</strong>: 允许证书用于 IPsec 终端系统。</li><li><strong>ipsecTunnel</strong>: 允许证书用于 IPsec 隧道。</li><li><strong>ipsecUser</strong>: 允许证书用于 IPsec 用户。</li></ul><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=nv>extendedKeyUsage</span> <span class=o>=</span> serverAuth, clientAuth
+</span></span></code></pre></td></tr></table></div></div><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>X509v3 Extended Key Usage: 
+</span></span><span class=line><span class=cl>TLS Web Server Authentication, TLS Web Client Authentication
+</span></span></code></pre></td></tr></table></div></div></details><details><summary>Subject Alternative Name (SAN): 用于指定证书的替代主题名称，这些名称可以是 DNS 名称、IP 地址、电子邮件地址等，这使得证书可以支持多个域名或其他标识符，而不需要为每个名称单独生成证书</summary><ul><li>多域名支持: SAN 允许一个证书同时支持多个域名。例如，一个 SSL/TLS 证书可以同时保护 <a class=link href=https://www.example.com target=_blank rel=noopener>www.example.com</a> 和 example.net。</li><li>IP 地址: SAN 可以包含 IP 地址，允许证书用于特定的 IP 地址。</li><li>电子邮件地址: SAN 也可以包含电子邮件地址，适用于 S/MIME 证书。</li><li>其他名称: SAN 还可以包含其他类型的名称，例如 URI 或其他自定义标识符。</li></ul><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=nv>subjectAltName</span> <span class=o>=</span> DNS:www.example.com, DNS:example.com, IP:192.168.1.1, email:info@example.com
+</span></span></code></pre></td></tr></table></div></div><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>X509v3 Subject Alternative Name: 
+</span></span><span class=line><span class=cl>DNS:www.example.com, DNS:example.com, IP Address:192.168.1.1, email:info@example.com
+</span></span></code></pre></td></tr></table></div></div></details><details><summary>Authority Key Identifier (AKI): 用于帮助识别签发该证书的证书颁发机构 (CA) 的公钥，是签发该证书 CA 的公钥哈希值</summary><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=nv>authorityKeyIdentifier</span><span class=o>=</span>keyid,issuer
+</span></span></code></pre></td></tr></table></div></div><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>X509v3 Authority Key Identifier: 
+</span></span><span class=line><span class=cl>keyid:CD:EE:95:A0:85:70:4B:59:6D:99:CA:6D:BE:7D:EB:FB:88:7B:64:35
+</span></span></code></pre></td></tr></table></div></div></details><details><summary>Subject Key Identifier (SKI): 是当前证书的公钥哈希值，如果使用该证书（CA）签发其他的证书，则子证书的 AKI 对应本证书的 SKI</summary><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=nv>subjectKeyIdentifier</span> <span class=o>=</span> <span class=nb>hash</span>
+</span></span></code></pre></td></tr></table></div></div><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>X509v3 Subject Key Identifier: 
+</span></span><span class=line><span class=cl>B9:AE:C9:13:AD:A7:C4:E4:51:A5:56:18:5C:2B:F6:E4:1E:95:C6:AB
+</span></span></code></pre></td></tr></table></div></div></details><details><summary>CRL Distribution Points (CRL DP): 用于指示证书撤销列表 (CRL) 的分发位置</summary><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=nv>crlDistributionPoints</span> <span class=o>=</span> URI:http://crl.example.com/crl.pem
+</span></span></code></pre></td></tr></table></div></div><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>X509v3 CRL Distribution Points: 
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>Full Name:
+</span></span><span class=line><span class=cl>    URI:http://crl.example.com/crl.pem
+</span></span></code></pre></td></tr></table></div></div></details><details><summary>Certificate Policies: 使用逗号分隔的格式来定义多个政策。每个政策由 OID 和相应的限定符</summary><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=nv>certificatePolicies</span> <span class=o>=</span> 1.3.6.1.4.1.12345.1.1.1, 1.2.3.4.5.6.7.8.9.1
+</span></span></code></pre></td></tr></table></div></div><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>X509v3 Certificate Policies: 
+</span></span><span class=line><span class=cl>Policy: 1.3.6.1.4.1.12345.1.1.1
+</span></span><span class=line><span class=cl>Policy: 1.2.3.4.5.6.7.8.9.1
+</span></span></code></pre></td></tr></table></div></div></details><details><summary>Authority Information Access (AIA): 用于提供有关如何访问证书颁发机构 (CA) 的信息，通常包含指向 CA 证书和在线证书状态协议 (OCSP) 服务器的 URL</summary><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=nv>authorityInfoAccess</span> <span class=o>=</span> OCSP<span class=p>;</span>URI:http://ocsp.example.com/, caIssuers<span class=p>;</span>URI:http://myca.example.com/ca.cer
+</span></span></code></pre></td></tr></table></div></div><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>Authority Information Access: 
+</span></span><span class=line><span class=cl>OCSP - URI:http://ocsp.example.com/
+</span></span><span class=line><span class=cl>CA Issuers - URI:http://myca.example.com/ca.cer
+</span></span></code></pre></td></tr></table></div></div></details><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 生成根证书和密钥</span>
+</span></span><span class=line><span class=cl>openssl req -x509 -new -nodes -keyout rootCA.key -out rootCA.pem -days <span class=m>365</span> -subj <span class=s2>&#34;/CN=Root CA&#34;</span> -newkey rsa:2048
+</span></span><span class=line><span class=cl><span class=c1># 生成服务器密钥和 CSR：</span>
+</span></span><span class=line><span class=cl>openssl genrsa -out server.key <span class=m>2048</span>
+</span></span><span class=line><span class=cl>openssl req -new -key server.key -out server.csr -subj <span class=s2>&#34;/CN=Server&#34;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 创建扩展配置文件：</span>
+</span></span><span class=line><span class=cl><span class=c1># 创建一个文件 v3.ext，包含如下内容：</span>
+</span></span><span class=line><span class=cl><span class=nv>authorityKeyIdentifier</span><span class=o>=</span>keyid,issuer
+</span></span><span class=line><span class=cl><span class=nv>basicConstraints</span><span class=o>=</span>CA:FALSE
+</span></span><span class=line><span class=cl><span class=nv>keyUsage</span><span class=o>=</span>digitalSignature, keyEncipherment
+</span></span><span class=line><span class=cl><span class=nv>extendedKeyUsage</span><span class=o>=</span>serverAuth
+</span></span><span class=line><span class=cl><span class=nv>subjectAltName</span><span class=o>=</span>DNS:example.com, DNS:www.example.com, IP:192.168.1.1
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 使用根证书签署服务器证书：</span>
+</span></span><span class=line><span class=cl><span class=c1># 使用 -extfile 和 -extensions 参数指定扩展配置文件：</span>
+</span></span><span class=line><span class=cl>openssl x509 -req -in server.csr -CA rootCA.pem -CAkey rootCA.key -CAcreateserial -out server.crt -days <span class=m>365</span> -extfile v3.ext
+</span></span><span class=line><span class=cl><span class=c1># 验证生成的证书</span>
+</span></span><span class=line><span class=cl>openssl x509 -in server.crt -noout -text
+</span></span><span class=line><span class=cl><span class=c1># 验证证书链</span>
+</span></span><span class=line><span class=cl>openssl verify -CAfile rootCA.pem server.crt
+</span></span></code></pre></td></tr></table></div></div><h2 id=pkcs-证书格式转换>PKCS 证书格式转换</h2><p>PKCS（Public Key Cryptography Standards）是由 RSA 实验室制定的一系列标准，主要用于公钥密码学。PKCS 的不同版本和编号代表了不同的标准和规范。</p><p>导出不同格式证书</p><ul><li><code>PKCS#1</code>：仅包含私钥信息，不包含证书链信息。主要存储 RSA 公钥和私钥（公钥可从私钥中提取</li><li><code>PKCS#8</code> ：存储私钥，不仅限于 RSA（DSA、ECDSA、RSA等，常用于多类型私钥常见：Java KeyStore、OpenSSL 等，比 <code>PKCS#1</code> 更通用；私钥首先会使用
+<code>PKCS#5</code> 的标准进行加密，然后将其进行 base64 编码，转换成为 <code>PEM</code> 格式进行存储</li><li><code>PKCS#7</code>：包含证书链信息，但不包含私钥信息。<ul><li>文件格式一般为 <code>.p7b</code></li></ul></li><li><code>PKCS#12</code>：可以存储证书，私钥或者 CRL。和 <code>PKCS#7</code> 相比，<code>PKCS#12</code> 可以额外存储私钥。<ul><li>在实际应用中，<code>PKCS#12</code> 格式的证书通常用于导入到浏览器或其他客户端应用程序中，而 <code>PKCS#1</code> 和 <code>PKCS#7</code>
+格式的证书则通常用于服务器端应用程序或其他特定场景。</li><li>PKCS12的文件是以 <code>.p12</code> 或者 <code>.pfx</code> 结尾的</li></ul></li><li><code>PKCS#10</code> ：定义证书请求格式，用于申请数字证书，即 CSR (Certificate Signing Request) 文件</li></ul><h3 id=pkcs1-pkcs8-pkcs10-x509-证书相关>PKCS#1, PKCS#8, PKCS#10, x509 证书相关</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 生成 2048 位 RSA 私钥，输出到 private_key.pem 文件</span>
+</span></span><span class=line><span class=cl><span class=c1># genrsa 命令用于生成符合 PKCS#1 标准的 RSA 私钥</span>
+</span></span><span class=line><span class=cl>openssl genrsa -out private_key.pem <span class=m>2048</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 使用 -pubout 参数从私钥中导出公钥</span>
+</span></span><span class=line><span class=cl>openssl rsa -in private_key.pem -pubout -out public_key.pem
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 创建证书签名请求</span>
+</span></span><span class=line><span class=cl><span class=c1># PKCS#10 定义了证书请求格式。-subj 参数指定证书主题信息，例如国家 (C)、州 (ST)、组织 (O) 等</span>
+</span></span><span class=line><span class=cl>openssl req -new -key private_key.pem -out csr.pem -subj <span class=s2>&#34;/C=CN/ST=Beijing/L=Beijing/O=MyCompany/OU=IT Department/CN=example.com&#34;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 用私钥和证书请求生成 x509 自签名证书</span>
+</span></span><span class=line><span class=cl>openssl x509 -req -in csr.pem -signkey private_key.pem -out certificate.pem -days <span class=m>365</span>
+</span></span><span class=line><span class=cl><span class=c1># 查看证书内容</span>
+</span></span><span class=line><span class=cl>openssl x509 -in certificate.pem -text -noout
+</span></span></code></pre></td></tr></table></div></div><h3 id=pkcs1-和-pkcs8-互转>PKCS#1 和 PKCS#8 互转</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span><span class=lnt>44
+</span><span class=lnt>45
+</span><span class=lnt>46
+</span><span class=lnt>47
+</span><span class=lnt>48
+</span><span class=lnt>49
+</span><span class=lnt>50
+</span><span class=lnt>51
+</span><span class=lnt>52
+</span><span class=lnt>53
+</span><span class=lnt>54
+</span><span class=lnt>55
+</span><span class=lnt>56
+</span><span class=lnt>57
+</span><span class=lnt>58
+</span><span class=lnt>59
+</span><span class=lnt>60
+</span><span class=lnt>61
+</span><span class=lnt>62
+</span><span class=lnt>63
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 生成 PKCS#1 格式的 RSA 私钥</span>
+</span></span><span class=line><span class=cl>openssl genrsa -out rsa_pkcs1.key <span class=m>2048</span>
+</span></span><span class=line><span class=cl><span class=c1># 验证文件格式</span>
+</span></span><span class=line><span class=cl>openssl rsa -in rsa_pkcs1.key -text -noout
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=o>===========</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 将 PKCS#1 私钥转换为 PKCS#8 格式（非加密）</span>
+</span></span><span class=line><span class=cl>openssl pkcs8 -topk8 -inform PEM -in rsa_pkcs1.key -outform PEM -nocrypt -out rsa_pkcs8.key
+</span></span><span class=line><span class=cl><span class=c1># 验证文件格式</span>
+</span></span><span class=line><span class=cl>openssl pkey -in rsa_pkcs8.key -text -noout
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 将 PKCS#1 私钥转换为 PKCS#8 格式（加密）</span>
+</span></span><span class=line><span class=cl><span class=c1># -passout, 指定加密密钥</span>
+</span></span><span class=line><span class=cl>openssl pkcs8 -topk8 -inform PEM -in rsa_pkcs1.key -outform PEM -out rsa_pkcs8_encrypted.key -passout pass:yourpassword
+</span></span><span class=line><span class=cl><span class=c1># 验证加密的 PKCS#8 文件</span>
+</span></span><span class=line><span class=cl>openssl pkey -in rsa_pkcs8_encrypted.key -text -noout -passin pass:yourpassword
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 将 PKCS#8 私钥还原为 PKCS#1 格式</span>
+</span></span><span class=line><span class=cl>openssl rsa -in rsa_pkcs8.key -out rsa_pkcs1_restored.key
+</span></span><span class=line><span class=cl><span class=c1># 验证还原后的文件</span>
+</span></span><span class=line><span class=cl>openssl rsa -in rsa_pkcs1_restored.key -text -noout
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=o>===========</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>## 验证私钥生成的公钥</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 提取公钥（从 PKCS#1 私钥）</span>
+</span></span><span class=line><span class=cl>openssl rsa -in rsa_pkcs1.key -pubout -out public_key_from_pkcs1.pem
+</span></span><span class=line><span class=cl><span class=c1># 提取公钥（从 PKCS#8 私钥）</span>
+</span></span><span class=line><span class=cl>openssl pkey -in rsa_pkcs8.key -pubout -out public_key_from_pkcs8.pem
+</span></span><span class=line><span class=cl><span class=c1># 验证公钥格式</span>
+</span></span><span class=line><span class=cl>openssl rsa -pubin -in public_key_from_pkcs1.pem -text -noout
+</span></span><span class=line><span class=cl>openssl rsa -pubin -in public_key_from_pkcs8.pem -text -noout
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>## 签名和验证测试</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 用 PKCS#1 私钥签名</span>
+</span></span><span class=line><span class=cl><span class=nb>echo</span> <span class=s2>&#34;Test message&#34;</span> &gt; test_message.txt
+</span></span><span class=line><span class=cl>openssl dgst -sha256 -sign rsa_pkcs1.key -out signature.bin test_message.txt
+</span></span><span class=line><span class=cl><span class=c1># 用 PKCS#1 公钥验证签名</span>
+</span></span><span class=line><span class=cl>openssl dgst -sha256 -verify public_key_from_pkcs1.pem -signature signature.bin test_message.txt
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 用 PKCS#8 私钥签名</span>
+</span></span><span class=line><span class=cl>openssl dgst -sha256 -sign rsa_pkcs8.key -out signature_pkcs8.bin test_message.txt
+</span></span><span class=line><span class=cl><span class=c1># 用 PKCS#8 公钥验证签名</span>
+</span></span><span class=line><span class=cl>openssl dgst -sha256 -verify public_key_from_pkcs8.pem -signature signature_pkcs8.bin test_message.txt
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>## 加密和解密验证测试</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 用 PKCS#1 公钥加密</span>
+</span></span><span class=line><span class=cl>openssl rsautl -encrypt -inkey public_key_from_pkcs1.pem -pubin -in test_message.txt -out encrypted_message_pkcs1.bin
+</span></span><span class=line><span class=cl><span class=c1># 用 PKCS#1 私钥解密</span>
+</span></span><span class=line><span class=cl>openssl rsautl -decrypt -inkey rsa_pkcs1.key -in encrypted_message_pkcs1.bin -out decrypted_message_pkcs1.txt
+</span></span><span class=line><span class=cl><span class=c1># 验证 PKCS#1 解密结果</span>
+</span></span><span class=line><span class=cl>diff test_message.txt decrypted_message_pkcs1.txt
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 用 PKCS#8 公钥加密</span>
+</span></span><span class=line><span class=cl>openssl rsautl -encrypt -inkey public_key_from_pkcs8.pem -pubin -in test_message.txt -out encrypted_message_pkcs8.bin
+</span></span><span class=line><span class=cl><span class=c1># 用 PKCS#8 私钥解密</span>
+</span></span><span class=line><span class=cl>openssl rsautl -decrypt -inkey rsa_pkcs8.key -in encrypted_message_pkcs8.bin -out decrypted_message_pkcs8.txt
+</span></span><span class=line><span class=cl><span class=c1># 验证 PKCS#8 解密结果</span>
+</span></span><span class=line><span class=cl>diff test_message.txt decrypted_message_pkcs8.txt
+</span></span></code></pre></td></tr></table></div></div><h3 id=pkcs7-证书链相关>PKCS#7 证书链相关</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 生成根证书和私钥</span>
+</span></span><span class=line><span class=cl>openssl genrsa -out rootCA.key <span class=m>2048</span>
+</span></span><span class=line><span class=cl>openssl req -x509 -new -key rootCA.key -out rootCA.pem -days <span class=m>365</span> -subj <span class=s2>&#34;/CN=Root CA&#34;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 生成中间证书和私钥</span>
+</span></span><span class=line><span class=cl>openssl genrsa -out intermediateCA.key <span class=m>2048</span>
+</span></span><span class=line><span class=cl>openssl req -new -key intermediateCA.key -out intermediateCA.csr -subj <span class=s2>&#34;/CN=Intermediate CA&#34;</span>
+</span></span><span class=line><span class=cl><span class=c1># 验证 csr</span>
+</span></span><span class=line><span class=cl>openssl req -in intermediateCA.csr -noout -text
+</span></span><span class=line><span class=cl><span class=c1># 使用根证书签署中间证书</span>
+</span></span><span class=line><span class=cl>openssl x509 -req -in intermediateCA.csr -CA rootCA.pem -CAkey rootCA.key -CAcreateserial -out intermediateCA.pem -days <span class=m>365</span>
+</span></span><span class=line><span class=cl><span class=c1># 验证证书</span>
+</span></span><span class=line><span class=cl>openssl x509 -in intermediateCA.pem -text -noout
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 生成证书链</span>
+</span></span><span class=line><span class=cl>cat intermediateCA.pem rootCA.pem &gt; cert_chain.pem
+</span></span><span class=line><span class=cl><span class=c1># 验证证书链</span>
+</span></span><span class=line><span class=cl>openssl verify -CAfile rootCA.pem intermediateCA.pem
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 使用证书创建 PKCS#7</span>
+</span></span><span class=line><span class=cl><span class=c1># crl2pkcs7 用于生成 PKCS#7 格式的证书链，-nocrl 表示不包括证书吊销列表 (CRL)</span>
+</span></span><span class=line><span class=cl>openssl crl2pkcs7 -certfile cert_chain.pem -out cert_chain.p7b -nocrl
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 验证 PKCS#7 文件</span>
+</span></span><span class=line><span class=cl>openssl pkcs7 -print -in cert_chain.p7b
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 将 PKCS#7 里的证书链提取出来</span>
+</span></span><span class=line><span class=cl>openssl pkcs7 -in cert_chain.p7b -print_certs -out extracted_certs.pem
+</span></span></code></pre></td></tr></table></div></div><h3 id=pkcs12-相关>PKCS#12 相关</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span><span class=lnt>44
+</span><span class=lnt>45
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 生成自签名根证书和私钥</span>
+</span></span><span class=line><span class=cl>openssl req -x509 -new -nodes -keyout rootCA.key -out rootCA.pem -days <span class=m>365</span> -subj <span class=s2>&#34;/CN=Root CA&#34;</span> -newkey rsa:2048
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 根证书签发中间 CA 证书 1</span>
+</span></span><span class=line><span class=cl>openssl genrsa -out intermediateCA1.key <span class=m>2048</span>
+</span></span><span class=line><span class=cl>openssl req -new -key intermediateCA1.key -out intermediateCA1.csr -subj <span class=s2>&#34;/CN=Intermediate CA 1&#34;</span>
+</span></span><span class=line><span class=cl>openssl x509 -req -in intermediateCA1.csr -CA rootCA.pem -CAkey rootCA.key -CAcreateserial -out intermediateCA1.pem -days <span class=m>365</span>
+</span></span><span class=line><span class=cl>openssl x509 -in intermediateCA1.pem -text -noout
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 中间 CA 1 证书签发中间 CA 证书 2</span>
+</span></span><span class=line><span class=cl>openssl genrsa -out intermediateCA2.key <span class=m>2048</span>
+</span></span><span class=line><span class=cl>openssl req -new -key intermediateCA2.key -out intermediateCA2.csr -subj <span class=s2>&#34;/CN=Intermediate CA 2&#34;</span>
+</span></span><span class=line><span class=cl>openssl x509 -req -in intermediateCA2.csr -CA intermediateCA1.pem -CAkey intermediateCA1.key -CAcreateserial -out intermediateCA2.pem -days <span class=m>365</span>
+</span></span><span class=line><span class=cl>openssl x509 -in intermediateCA2.pem -text -noout
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 创建完整的证书链</span>
+</span></span><span class=line><span class=cl>cat intermediateCA2.pem intermediateCA1.pem rootCA.pem &gt; chain.pem
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 生成 PKCS#12 文件</span>
+</span></span><span class=line><span class=cl><span class=c1># -inkey 指定服务器私钥</span>
+</span></span><span class=line><span class=cl><span class=c1># -certfile 指定证书链</span>
+</span></span><span class=line><span class=cl><span class=c1># -in 指定服务器证书</span>
+</span></span><span class=line><span class=cl><span class=c1># -name 指定证书的名称</span>
+</span></span><span class=line><span class=cl><span class=c1># -password 对 p12 加密密钥; 密码文件: file:password.txt; 明文密码: pass:yourpassword; stdin 标准输入录入密码</span>
+</span></span><span class=line><span class=cl>openssl pkcs12 -export -out server.p12 -inkey server.key -in server.crt -certfile chain.pem -name <span class=s2>&#34;ServerCert&#34;</span> -password pass:yourpassword
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 导出证书和私钥的 PEM 格式，该 server.pem 可以被安装到服务器中</span>
+</span></span><span class=line><span class=cl><span class=c1># -nodes 表示导出的 PEM 不加密码，里面包含密钥，因此推荐加密码</span>
+</span></span><span class=line><span class=cl>openssl pkcs12 -in server.p12 -out server.pem -nodes
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># p12 提取私钥</span>
+</span></span><span class=line><span class=cl><span class=c1># -password 是p12 文件的加密的密码</span>
+</span></span><span class=line><span class=cl><span class=c1># -nodes 对导出的密钥文件不加密</span>
+</span></span><span class=line><span class=cl>openssl pkcs12 -in server.p12 -nocerts -out extracted_key.pem -password pass:yourpassword -nodes
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># p12 提取证书</span>
+</span></span><span class=line><span class=cl><span class=c1># -clcerts 提取服务器证书</span>
+</span></span><span class=line><span class=cl><span class=c1># -nokeys 不包含私钥</span>
+</span></span><span class=line><span class=cl><span class=c1># -password 是p12 文件的加密的密码</span>
+</span></span><span class=line><span class=cl>openssl pkcs12 -in server.p12 -clcerts -nokeys -out extracted_cert.pem -password pass:yourpassword
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># p12 提取完整证书链（不包含服务器证书）</span>
+</span></span><span class=line><span class=cl><span class=c1># -cacerts 提取证书链，不包含私钥和服务器证书</span>
+</span></span><span class=line><span class=cl><span class=c1># -password 是p12 文件的加密的密码</span>
+</span></span><span class=line><span class=cl>openssl pkcs12 -in server.p12 -cacerts -nokeys -out extracted_chain.pem -password pass:yourpassword
+</span></span></code></pre></td></tr></table></div></div><h1 id=ecc>ECC</h1><p>椭圆曲线密码学（Elliptic Curve Cryptography，ECC）</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 查看可用的椭圆曲线参数</span>
+</span></span><span class=line><span class=cl>openssl ecparam -list_curves
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 生成 ECC 私钥，-name 选择椭圆曲线参数</span>
+</span></span><span class=line><span class=cl>openssl ecparam -genkey -name prime256v1 -out ec_private_key.pem
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 验证 ECC 私钥详细信息</span>
+</span></span><span class=line><span class=cl>openssl ec -in ec_private_key.pem -text -noout
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 查看椭圆曲线详细参数</span>
+</span></span><span class=line><span class=cl>openssl ecparam -name prime256v1 -text -param_enc explicit
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 根据 ECC 私钥获取公钥，-name 保持一致</span>
+</span></span><span class=line><span class=cl>openssl ecparam -name prime256v1 -in ec_private_key.pem -out ec_public_key.pem
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 查看公钥内容</span>
+</span></span><span class=line><span class=cl>openssl ec -pubin -in ec_public_key.pem -text -noout
+</span></span></code></pre></td></tr></table></div></div><h2 id=ecc-转换格式>ECC 转换格式</h2><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span><span class=lnt>8
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># ECC 私钥从 PEM 转为 DER 格式</span>
+</span></span><span class=line><span class=cl>openssl ec -in ec_private_key.pem -outform DER -out ec_private_key.der
+</span></span><span class=line><span class=cl><span class=c1># ECC 公钥从 PEM 转为 DER 格式</span>
+</span></span><span class=line><span class=cl>openssl ec -pubin -in ec_public_key.pem -outform DER -out ec_public_key.der
+</span></span><span class=line><span class=cl><span class=c1># ECC 私钥从 DER 转为 PEM 格式</span>
+</span></span><span class=line><span class=cl>openssl ec -inform DER -in ec_private_key.der -out ec_private_key.pem
+</span></span><span class=line><span class=cl><span class=c1># ECC 公钥从 DER 转为 PEM 格式</span>
+</span></span><span class=line><span class=cl>openssl ec -pubin -inform DER -in ec_public_key.der -out ec_public_key.pem
+</span></span></code></pre></td></tr></table></div></div><h2 id=ecdsa-签名与验签>ECDSA 签名与验签</h2><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=nb>echo</span> <span class=s2>&#34;hello&#34;</span> &gt; plaintext.txt
+</span></span><span class=line><span class=cl><span class=c1># 对文件进行 SHA256 签名</span>
+</span></span><span class=line><span class=cl>openssl dgst -sha256 -sign ec_private_key.pem -out signature.bin plaintext.txt
+</span></span><span class=line><span class=cl><span class=c1># 公钥验证签名</span>
+</span></span><span class=line><span class=cl>openssl dgst -sha256 -verify ec_public_key.pem -signature signature.bin plaintext.txt
+</span></span></code></pre></td></tr></table></div></div><h2 id=ecdh-非对称加密>ECDH 非对称加密</h2><p>Alice 和 Bob 进行非对称加密，流程与 HTTPS 握手相似，ECDH 不像 RSA 可以直接公钥加密，私钥解密，而是使用对方的公钥，配合自己的私钥生成共享密钥，加解密使用共享密钥做对称加密</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># Alice 生成自己的密钥对</span>
+</span></span><span class=line><span class=cl>openssl ecparam -genkey -name prime256v1 -out alice_private.pem
+</span></span><span class=line><span class=cl>openssl ec -in alice_private.pem -pubout -out alice_public.pem
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># Bob 生成自己的密钥对</span>
+</span></span><span class=line><span class=cl>openssl ecparam -genkey -name prime256v1 -out bob_private.pem
+</span></span><span class=line><span class=cl>openssl ec -in bob_private.pem -pubout -out bob_public.pem
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># Alice 生成共享密钥</span>
+</span></span><span class=line><span class=cl>openssl pkeyutl -derive -inkey alice_private.pem -peerkey bob_public.pem -out shared_key.bin
+</span></span><span class=line><span class=cl><span class=c1># Bob 生成共享密钥</span>
+</span></span><span class=line><span class=cl>openssl pkeyutl -derive -inkey bob_private.pem -peerkey alice_public.pem -out shared_key.bin
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=nb>echo</span> <span class=s2>&#34;hello&#34;</span> &gt; plaintext.txt
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># Alice 使用共享密钥加密文件</span>
+</span></span><span class=line><span class=cl>openssl enc -aes-256-cbc -salt -in plaintext.txt -out encrypted.txt -pass file:shared_key.bin
+</span></span><span class=line><span class=cl><span class=c1># Alice 使用私钥对加密文件进行签名</span>
+</span></span><span class=line><span class=cl>openssl dgst -sha256 -sign alice_private.pem -out signature.bin encrypted.txt
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># Bob 使用共享密钥解密</span>
+</span></span><span class=line><span class=cl>openssl enc -d -aes-256-cbc -in encrypted.txt -out decrypted.txt -pass file:shared_key.bin
+</span></span><span class=line><span class=cl><span class=c1># Bob 使用公钥验签</span>
+</span></span><span class=line><span class=cl>openssl dgst -sha256 -verify alice_public.pem -signature signature.bin encrypted.txt
+</span></span></code></pre></td></tr></table></div></div><h2 id=生成自签名-ecc-证书>生成自签名 ECC 证书</h2><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 使用 ECC 私钥生成自签名证书</span>
+</span></span><span class=line><span class=cl>openssl req -x509 -new -key ec_private_key.pem -out ec_cert.pem <span class=se>\
+</span></span></span><span class=line><span class=cl><span class=se></span>  -subj <span class=s2>&#34;/C=CN/ST=Beijing/L=Beijing/O=MyOrg/OU=IT/CN=example.com&#34;</span> -days <span class=m>365</span>
+</span></span><span class=line><span class=cl>  
+</span></span><span class=line><span class=cl><span class=c1># 查看证书的详细信息</span>
+</span></span><span class=line><span class=cl>openssl x509 -in ec_cert.pem -text -noout
+</span></span></code></pre></td></tr></table></div></div><h1 id=aes>AES</h1><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=nb>echo</span> <span class=s2>&#34;hello&#34;</span> &gt; plaintext.txt
+</span></span><span class=line><span class=cl>openssl rand <span class=m>16</span> -out key.bin
+</span></span><span class=line><span class=cl>openssl rand <span class=m>16</span> -out iv.bin
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># AES-128-CBC 加解密</span>
+</span></span><span class=line><span class=cl><span class=c1># -K 指定密钥（十六进制）</span>
+</span></span><span class=line><span class=cl><span class=c1># -iv 指定初始向量（十六进制），一般为 16 字节</span>
+</span></span><span class=line><span class=cl><span class=c1># -K 和 -iv 必须一起使用，因为 -K 不会自动生成 iv</span>
+</span></span><span class=line><span class=cl>openssl enc -aes-128-cbc -in plaintext.txt -out encrypted.bin -K <span class=k>$(</span>xxd -p key.bin<span class=k>)</span> -iv <span class=k>$(</span>xxd -p iv.bin<span class=k>)</span>
+</span></span><span class=line><span class=cl>openssl enc -d -aes-128-cbc -in encrypted.bin -out decrypted.txt -K <span class=k>$(</span>xxd -p key.bin<span class=k>)</span> -iv <span class=k>$(</span>xxd -p iv.bin<span class=k>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 可以用 -pass file: 指定文件作为密钥</span>
+</span></span><span class=line><span class=cl><span class=c1># 如果使用 -pass 替代 -K 可以不需要 -iv，-pass 会自动生成 iv，并添加到 padding 头部</span>
+</span></span><span class=line><span class=cl><span class=c1># -pass 可以加 -pass stdin，不使用文件密钥，可以从标准输入中读取</span>
+</span></span><span class=line><span class=cl>openssl enc -aes-128-cbc -in plaintext.txt -out encrypted.bin -pass file:key.bin
+</span></span><span class=line><span class=cl>openssl enc -d -aes-128-cbc -in encrypted.bin -out decrypted.txt -pass file:key.bin
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># -pbkdf2：使用 PBKDF2 进行密钥派生，openssl 3 版本默认都推荐添加</span>
+</span></span><span class=line><span class=cl><span class=c1># 或者使用 -iter 100000 替代 -pbkdf2, 表示迭代 100000 次，解密也需要添加</span>
+</span></span><span class=line><span class=cl><span class=c1># -p 可以打印盐值 salt，派生后的密钥 key 和 iv</span>
+</span></span><span class=line><span class=cl>openssl enc -aes-128-cbc -in plaintext.txt -out encrypted.bin -pass stdin -pbkdf2 -p
+</span></span><span class=line><span class=cl>openssl enc -d -aes-128-cbc -in encrypted.bin -out decrypted.txt -pass stdin -pbkdf2
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># AES-256-CBC 模式加密</span>
+</span></span><span class=line><span class=cl>openssl enc -aes-256-cbc -salt -in plaintext.txt -out encrypted.bin -pass file:./password.bin
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 解密</span>
+</span></span><span class=line><span class=cl>openssl enc -aes-256-cbc -d -in encrypted.bin -out decrypted.txt -pass file:./password.bin
+</span></span></code></pre></td></tr></table></div></div><h1 id=reference>Reference</h1><ul><li><a class=link href=https://docs.openssl.org/master/man5/x509v3_config/ target=_blank rel=noopener>x509v3_config - OpenSSL Documentation</a></li><li><a class=link href=https://pki-tutorial.readthedocs.io/en/latest/index.html# target=_blank rel=noopener>OpenSSL PKI Tutorial v2.0 — OpenSSL PKI Tutorial</a></li></ul></section><footer class=article-footer><section class=article-tags><a href=/tags/openssl/>OpenSSL</a>
+<a href=/tags/cryptography/>Cryptography</a></section><section class=article-copyright><svg class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><path d="M14.5 9a3.5 4 0 100 6"/></svg>
+<span>Licensed under CC BY-NC-SA 4.0</span></section></footer><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css integrity=sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV crossorigin=anonymous><script src=https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js integrity=sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8 crossorigin=anonymous defer></script><script src=https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js integrity=sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05 crossorigin=anonymous defer></script><script>window.addEventListener("DOMContentLoaded",()=>{const e=document.querySelector(".main-article");renderMathInElement(e,{delimiters:[{left:"$$",right:"$$",display:!0},{left:"$",right:"$",display:!1},{left:"\\(",right:"\\)",display:!1},{left:"\\[",right:"\\]",display:!0}],ignoredClasses:["gist"]})})</script></article><aside class=related-content--wrapper><h2 class=section-title>相关文章</h2><div class=related-content><div class="flex article-list--tile"><article class=has-image><a href=/post/https-tls-and-mtls-and-certificate-related/><div class=article-image><img src=/post/https-tls-and-mtls-and-certificate-related/mtls-cover.2316741c16c2e958c17eca69f980ebf9_hu_86b32d1d70acbc8c.png width=250 height=150 loading=lazy alt="Featured image of post HTTPS 单双向认证及证书相关" data-key=HTTPS-TLS-and-mTLS-and-certificate-related data-hash="md5-IxZ0HBbC6VjBfspp+YDr+Q=="></div><div class=article-details><h2 class=article-title>HTTPS 单双向认证及证书相关</h2></div></a></article><article class=has-image><a href=/post/spring-i18n-abstract-encapsulation-practice/><div class=article-image><img src=/post/spring-i18n-abstract-encapsulation-practice/spring-cover.5a91ac3e53be98b30bf3dfe851c8a1de_hu_5c9922c0a04d15f1.png width=250 height=150 loading=lazy alt="Featured image of post Spring i18n 抽象封装实践" data-key=spring-i18n-abstract-encapsulation-practice data-hash="md5-WpGsPlO+mLML89/oUcih3g=="></div><div class=article-details><h2 class=article-title>Spring i18n 抽象封装实践</h2></div></a></article><article class=has-image><a href=/post/thoughts-on-java-lvalues-and-rvalues/><div class=article-image><img src=/post/thoughts-on-java-lvalues-and-rvalues/java-programming-cover.234de2e0b6de9957ec35995fb2be5099_hu_8f5903ded2d555db.png width=250 height=150 loading=lazy alt="Featured image of post Java 左值和右值的思考" data-key=Thoughts-on-Java-lvalues-and-rvalues data-hash="md5-I03i4LbemVfsNZlfsr5QmQ=="></div><div class=article-details><h2 class=article-title>Java 左值和右值的思考</h2></div></a></article><article class=has-image><a href=/post/some-thoughts-on-designing-absolute-method/><div class=article-image><img src=/post/some-thoughts-on-designing-absolute-method/java-programming-cover.234de2e0b6de9957ec35995fb2be5099_hu_8f5903ded2d555db.png width=250 height=150 loading=lazy alt="Featured image of post 关于设计绝对值 abs() 的一些思考" data-key=some-thoughts-on-designing-absolute-method data-hash="md5-I03i4LbemVfsNZlfsr5QmQ=="></div><div class=article-details><h2 class=article-title>关于设计绝对值 abs() 的一些思考</h2></div></a></article><article class=has-image><a href=/post/java-for_loop_for_each_iterator-efficiency-analysis/><div class=article-image><img src=/post/java-for_loop_for_each_iterator-efficiency-analysis/java-programming-cover.234de2e0b6de9957ec35995fb2be5099_hu_8f5903ded2d555db.png width=250 height=150 loading=lazy alt="Featured image of post Java For-loop For-each Iterator 效率分析" data-key=Java-for_loop_for_each_iterator-efficiency-analysis data-hash="md5-I03i4LbemVfsNZlfsr5QmQ=="></div><div class=article-details><h2 class=article-title>Java For-loop For-each Iterator 效率分析</h2></div></a></article></div></div></aside><footer class=site-footer><section class=copyright>&copy;
+2020 -
+2025 Capriwits's site</section><section class=powerby>使用 <a href=https://gohugo.io/ target=_blank rel=noopener>Hugo</a> 构建<br>主题 <b><a href=https://github.com/CaiJimmy/hugo-theme-stack target=_blank rel=noopener data-version=3.30.0>Stack</a></b> 由 <a href=https://jimmycai.com target=_blank rel=noopener>Jimmy</a> 设计</section></footer><div class=pswp tabindex=-1 role=dialog aria-hidden=true><div class=pswp__bg></div><div class=pswp__scroll-wrap><div class=pswp__container><div class=pswp__item></div><div class=pswp__item></div><div class=pswp__item></div></div><div class="pswp__ui pswp__ui--hidden"><div class=pswp__top-bar><div class=pswp__counter></div><button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+<button class="pswp__button pswp__button--share" title=Share></button>
+<button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+<button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button><div class=pswp__preloader><div class=pswp__preloader__icn><div class=pswp__preloader__cut><div class=pswp__preloader__donut></div></div></div></div></div><div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap"><div class=pswp__share-tooltip></div></div><button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+</button>
+<button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)"></button><div class=pswp__caption><div class=pswp__caption__center></div></div></div></div></div><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo=" crossorigin=anonymous defer></script><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU=" crossorigin=anonymous defer></script><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css crossorigin=anonymous><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css crossorigin=anonymous></main></div><script src=https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z+KMkF24hUW8WePSA9HM=" crossorigin=anonymous></script><script type=text/javascript src=/ts/main.1e9a3bafd846ced4c345d084b355fb8c7bae75701c338f8a1f8a82c780137826.js defer></script><script>(function(){const e=document.createElement("link");e.href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap",e.type="text/css",e.rel="stylesheet",document.head.appendChild(e)})()</script></body></html>
