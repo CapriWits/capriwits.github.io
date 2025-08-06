@@ -7,16 +7,15 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: true  # Fetch Hugo themes (true OR recursive)
           fetch-depth: 0    # Fetch all history for .GitInfo and .Lastmod
 
       - name: Setup Hugo
-        uses: peaceiris/actions-hugo@v2
+        uses: peaceiris/actions-hugo@v3
         with:
           hugo-version: 'latest'
           extended: true
@@ -26,9 +25,11 @@ jobs:
 
       - name: Github-Page Deployment
         uses: peaceiris/actions-gh-pages@v3
+        if: github.ref == 'refs/heads/master'
+        timeout-minutes: 20
         with:
-          PERSONAL_TOKEN: ${{ secrets.TOKEN_FOR_GITHUB_PAGE }}
-          EXTERNAL_REPOSITORY: CapriWits/capriwits.github.io
-          PUBLISH_BRANCH: gh-pages
-          PUBLISH_DIR: ./public
+          personal_token: ${{ secrets.TOKEN_FOR_GITHUB_PAGE }}
+          external_repository: CapriWits/capriwits.github.io
+          publish_branch: gh-pages
+          publish_dir: ./public
           commit_message: ${{ github.event.head_commit.message }}
