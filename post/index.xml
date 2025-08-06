@@ -1,4 +1,370 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on Capriwits's site</title><link>https://capriwits.com/post/</link><description>Recent content in Posts on Capriwits's site</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><lastBuildDate>Sun, 26 Jan 2025 20:43:16 +0800</lastBuildDate><atom:link href="https://capriwits.com/post/index.xml" rel="self" type="application/rss+xml"/><item><title>OpenSSL 及 X509 证书相关</title><link>https://capriwits.com/post/openssl-and-x509-certificate-related/</link><pubDate>Sun, 26 Jan 2025 20:43:16 +0800</pubDate><guid>https://capriwits.com/post/openssl-and-x509-certificate-related/</guid><description>&lt;img src="https://capriwits.com/post/openssl-and-x509-certificate-related/openssl-icon.png" alt="Featured image of post OpenSSL 及 X509 证书相关" />&lt;!-- TOC -->
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on Capriwits's site</title><link>https://capriwits.com/post/</link><description>Recent content in Posts on Capriwits's site</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><lastBuildDate>Wed, 06 Aug 2025 23:28:25 +0800</lastBuildDate><atom:link href="https://capriwits.com/post/index.xml" rel="self" type="application/rss+xml"/><item><title>MySQL JSON 字段格式变更导致摘要不一致问题及解决方案</title><link>https://capriwits.com/post/mysql-json-field-format-change-causes-inconsistent-digest-problems/</link><pubDate>Wed, 06 Aug 2025 23:28:25 +0800</pubDate><guid>https://capriwits.com/post/mysql-json-field-format-change-causes-inconsistent-digest-problems/</guid><description>&lt;img src="https://capriwits.com/post/mysql-json-field-format-change-causes-inconsistent-digest-problems/mysql-cover.png" alt="Featured image of post MySQL JSON 字段格式变更导致摘要不一致问题及解决方案" />&lt;h1 id="mysql-json-字段格式变更导致摘要不一致问题及解决方案">MySQL JSON 字段格式变更导致摘要不一致问题及解决方案
+&lt;/h1>&lt;p>&lt;img src="https://img.shields.io/badge/MySQL-8.0.39-blue"
+loading="lazy"
+>&lt;/p>
+&lt;p>&lt;img src="https://img.shields.io/badge/Golang-1.24.5-pink"
+loading="lazy"
+>&lt;/p>
+&lt;p>在实际开发中，为了增强数据结构的灵活性，MySQL 的 &lt;code>JSON&lt;/code> 类型被广泛使用。然而，在使用过程中发现，&lt;strong>MySQL 会对插入的 JSON 数据在存储或查询时进行自动格式化处理&lt;/strong>，例如：&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>调整键值对顺序&lt;/strong>（基于键名排序）；&lt;/li>
+&lt;li>&lt;strong>在 key 与 value 之间添加空格&lt;/strong>；&lt;/li>
+&lt;li>&lt;strong>去除或添加某些结构性字符（如换行）&lt;/strong>。&lt;/li>
+&lt;/ul>
+&lt;p>这种格式调整虽然不影响 JSON 的语义，但在某些业务场景下却可能造成严重问题，例如&lt;strong>基于 JSON 数据计算的摘要（如 SHA1 或 MD5）发生不一致&lt;/strong>。&lt;/p>
+&lt;hr>
+&lt;h1 id="现象举例">现象举例
+&lt;/h1>&lt;ol>
+&lt;li>
+&lt;p>在业务逻辑中使用 &lt;code>{&amp;quot;key&amp;quot;:&amp;quot;value&amp;quot;}&lt;/code> 插入 MySQL。&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>插入前计算摘要为：&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-json" data-lang="json">&lt;span class="line">&lt;span class="cl">&lt;span class="err">SHA&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="err">(&lt;/span>&lt;span class="s2">&amp;#34;{&amp;#34;&lt;/span>&lt;span class="err">key&lt;/span>&lt;span class="s2">&amp;#34;:&amp;#34;&lt;/span>&lt;span class="err">value&lt;/span>&lt;span class="s2">&amp;#34;}&amp;#34;&lt;/span>&lt;span class="err">)&lt;/span> &lt;span class="err">=&lt;/span> &lt;span class="mi">228458095&lt;/span>&lt;span class="err">a&lt;/span>&lt;span class="mi">9502070&lt;/span>&lt;span class="err">fc&lt;/span>&lt;span class="mi">113&lt;/span>&lt;span class="err">d&lt;/span>&lt;span class="mi">99504226&lt;/span>&lt;span class="err">a&lt;/span>&lt;span class="mi">6&lt;/span>&lt;span class="err">ff&lt;/span>&lt;span class="mi">90&lt;/span>&lt;span class="err">a&lt;/span>&lt;span class="mi">9&lt;/span>&lt;span class="err">a&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;/li>
+&lt;li>
+&lt;p>从 MySQL 查询结果为：&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-json" data-lang="json">&lt;span class="line">&lt;span class="cl">&lt;span class="p">{&lt;/span>&lt;span class="nt">&amp;#34;key&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="s2">&amp;#34;value&amp;#34;&lt;/span>&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>（注意 key 和 value 之间多了一个空格）&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>查询结果的摘要为：&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-json" data-lang="json">&lt;span class="line">&lt;span class="cl">&lt;span class="err">SHA&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="err">(&lt;/span>&lt;span class="s2">&amp;#34;{&amp;#34;&lt;/span>&lt;span class="err">key&lt;/span>&lt;span class="s2">&amp;#34;: &amp;#34;&lt;/span>&lt;span class="err">value&lt;/span>&lt;span class="s2">&amp;#34;}&amp;#34;&lt;/span>&lt;span class="err">)&lt;/span> &lt;span class="err">=&lt;/span> &lt;span class="err">e&lt;/span>&lt;span class="mi">735&lt;/span>&lt;span class="err">dd&lt;/span>&lt;span class="mf">8e68&lt;/span>&lt;span class="err">d&lt;/span>&lt;span class="mi">8938109&lt;/span>&lt;span class="err">f&lt;/span>&lt;span class="mi">02&lt;/span>&lt;span class="err">c&lt;/span>&lt;span class="mi">383&lt;/span>&lt;span class="err">cc&lt;/span>&lt;span class="mi">9&lt;/span>&lt;span class="err">d&lt;/span>&lt;span class="mi">056&lt;/span>&lt;span class="err">c&lt;/span>&lt;span class="mi">942&lt;/span>&lt;span class="err">a&lt;/span>&lt;span class="mi">514&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;/li>
+&lt;/ol>
+&lt;blockquote>
+&lt;p>结果：两次摘要不同，无法用于数据一致性校验或签名验证。&lt;/p>&lt;/blockquote>
+&lt;hr>
+&lt;h1 id="根因分析">根因分析
+&lt;/h1>&lt;ul>
+&lt;li>&lt;strong>MySQL JSON 类型底层以二进制 JSON 存储&lt;/strong>，查询时为了展示友好，可能会自动格式化。&lt;/li>
+&lt;li>不同语言或客户端（如 Java 的 Jackson、Go 的 encoding/json）对 JSON 的序列化顺序、空格控制也可能不同。&lt;/li>
+&lt;li>即使语义一致，&lt;strong>JSON 文本结构上的任何变化都会导致摘要计算结果不同&lt;/strong>。&lt;/li>
+&lt;/ul>
+&lt;hr>
+&lt;h1 id="golang-示例">Golang 示例
+&lt;/h1>&lt;p>创建 MySQL 测试表&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;span class="lnt">6
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-sql" data-lang="sql">&lt;span class="line">&lt;span class="cl">&lt;span class="k">CREATE&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">TABLE&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">IF&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">NOT&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">EXISTS&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">json_test&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">id&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nb">INT&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">AUTO_INCREMENT&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">PRIMARY&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">KEY&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">content&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">JSON&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">digest&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nb">CHAR&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">40&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">GENERATED&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">ALWAYS&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">AS&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">SHA1&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">content&lt;/span>&lt;span class="p">))&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">STORED&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>测试代码&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt"> 10
+&lt;/span>&lt;span class="lnt"> 11
+&lt;/span>&lt;span class="lnt"> 12
+&lt;/span>&lt;span class="lnt"> 13
+&lt;/span>&lt;span class="lnt"> 14
+&lt;/span>&lt;span class="lnt"> 15
+&lt;/span>&lt;span class="lnt"> 16
+&lt;/span>&lt;span class="lnt"> 17
+&lt;/span>&lt;span class="lnt"> 18
+&lt;/span>&lt;span class="lnt"> 19
+&lt;/span>&lt;span class="lnt"> 20
+&lt;/span>&lt;span class="lnt"> 21
+&lt;/span>&lt;span class="lnt"> 22
+&lt;/span>&lt;span class="lnt"> 23
+&lt;/span>&lt;span class="lnt"> 24
+&lt;/span>&lt;span class="lnt"> 25
+&lt;/span>&lt;span class="lnt"> 26
+&lt;/span>&lt;span class="lnt"> 27
+&lt;/span>&lt;span class="lnt"> 28
+&lt;/span>&lt;span class="lnt"> 29
+&lt;/span>&lt;span class="lnt"> 30
+&lt;/span>&lt;span class="lnt"> 31
+&lt;/span>&lt;span class="lnt"> 32
+&lt;/span>&lt;span class="lnt"> 33
+&lt;/span>&lt;span class="lnt"> 34
+&lt;/span>&lt;span class="lnt"> 35
+&lt;/span>&lt;span class="lnt"> 36
+&lt;/span>&lt;span class="lnt"> 37
+&lt;/span>&lt;span class="lnt"> 38
+&lt;/span>&lt;span class="lnt"> 39
+&lt;/span>&lt;span class="lnt"> 40
+&lt;/span>&lt;span class="lnt"> 41
+&lt;/span>&lt;span class="lnt"> 42
+&lt;/span>&lt;span class="lnt"> 43
+&lt;/span>&lt;span class="lnt"> 44
+&lt;/span>&lt;span class="lnt"> 45
+&lt;/span>&lt;span class="lnt"> 46
+&lt;/span>&lt;span class="lnt"> 47
+&lt;/span>&lt;span class="lnt"> 48
+&lt;/span>&lt;span class="lnt"> 49
+&lt;/span>&lt;span class="lnt"> 50
+&lt;/span>&lt;span class="lnt"> 51
+&lt;/span>&lt;span class="lnt"> 52
+&lt;/span>&lt;span class="lnt"> 53
+&lt;/span>&lt;span class="lnt"> 54
+&lt;/span>&lt;span class="lnt"> 55
+&lt;/span>&lt;span class="lnt"> 56
+&lt;/span>&lt;span class="lnt"> 57
+&lt;/span>&lt;span class="lnt"> 58
+&lt;/span>&lt;span class="lnt"> 59
+&lt;/span>&lt;span class="lnt"> 60
+&lt;/span>&lt;span class="lnt"> 61
+&lt;/span>&lt;span class="lnt"> 62
+&lt;/span>&lt;span class="lnt"> 63
+&lt;/span>&lt;span class="lnt"> 64
+&lt;/span>&lt;span class="lnt"> 65
+&lt;/span>&lt;span class="lnt"> 66
+&lt;/span>&lt;span class="lnt"> 67
+&lt;/span>&lt;span class="lnt"> 68
+&lt;/span>&lt;span class="lnt"> 69
+&lt;/span>&lt;span class="lnt"> 70
+&lt;/span>&lt;span class="lnt"> 71
+&lt;/span>&lt;span class="lnt"> 72
+&lt;/span>&lt;span class="lnt"> 73
+&lt;/span>&lt;span class="lnt"> 74
+&lt;/span>&lt;span class="lnt"> 75
+&lt;/span>&lt;span class="lnt"> 76
+&lt;/span>&lt;span class="lnt"> 77
+&lt;/span>&lt;span class="lnt"> 78
+&lt;/span>&lt;span class="lnt"> 79
+&lt;/span>&lt;span class="lnt"> 80
+&lt;/span>&lt;span class="lnt"> 81
+&lt;/span>&lt;span class="lnt"> 82
+&lt;/span>&lt;span class="lnt"> 83
+&lt;/span>&lt;span class="lnt"> 84
+&lt;/span>&lt;span class="lnt"> 85
+&lt;/span>&lt;span class="lnt"> 86
+&lt;/span>&lt;span class="lnt"> 87
+&lt;/span>&lt;span class="lnt"> 88
+&lt;/span>&lt;span class="lnt"> 89
+&lt;/span>&lt;span class="lnt"> 90
+&lt;/span>&lt;span class="lnt"> 91
+&lt;/span>&lt;span class="lnt"> 92
+&lt;/span>&lt;span class="lnt"> 93
+&lt;/span>&lt;span class="lnt"> 94
+&lt;/span>&lt;span class="lnt"> 95
+&lt;/span>&lt;span class="lnt"> 96
+&lt;/span>&lt;span class="lnt"> 97
+&lt;/span>&lt;span class="lnt"> 98
+&lt;/span>&lt;span class="lnt"> 99
+&lt;/span>&lt;span class="lnt">100
+&lt;/span>&lt;span class="lnt">101
+&lt;/span>&lt;span class="lnt">102
+&lt;/span>&lt;span class="lnt">103
+&lt;/span>&lt;span class="lnt">104
+&lt;/span>&lt;span class="lnt">105
+&lt;/span>&lt;span class="lnt">106
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">package&lt;/span> &lt;span class="nx">main&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="p">(&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s">&amp;#34;crypto/sha1&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s">&amp;#34;database/sql&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s">&amp;#34;encoding/hex&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s">&amp;#34;fmt&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s">&amp;#34;log&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">_&lt;/span> &lt;span class="s">&amp;#34;github.com/go-sql-driver/mysql&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">type&lt;/span> &lt;span class="nx">JSONTest&lt;/span> &lt;span class="kd">struct&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">ID&lt;/span> &lt;span class="kt">int&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">Content&lt;/span> &lt;span class="kt">string&lt;/span> &lt;span class="c1">// 原始JSON字符串&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">Digest&lt;/span> &lt;span class="kt">string&lt;/span> &lt;span class="c1">// MySQL计算的摘要&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">main&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 数据库配置&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">db&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">err&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">sql&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Open&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;mysql&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s">&amp;#34;mysql8:233233@tcp(127.1:3306)/db1?charset=utf8mb4&amp;amp;parseTime=True&amp;amp;loc=Local&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">err&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="kc">nil&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">log&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Fatal&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;数据库连接失败:&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">err&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">defer&lt;/span> &lt;span class="nx">db&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Close&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 测试用例&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">testCases&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="p">[]&lt;/span>&lt;span class="kd">struct&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">name&lt;/span> &lt;span class="kt">string&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">input&lt;/span> &lt;span class="kt">string&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">name&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="s">&amp;#34;紧凑JSON&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">input&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="s">`{&amp;#34;name&amp;#34;:&amp;#34;Alice&amp;#34;,&amp;#34;age&amp;#34;:30,&amp;#34;active&amp;#34;:true}`&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">},&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">name&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="s">&amp;#34;带空格JSON&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">input&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="s">`{ &amp;#34;name&amp;#34;: &amp;#34;Bob&amp;#34;, &amp;#34;age&amp;#34;: 25, &amp;#34;active&amp;#34;: false }`&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">},&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">for&lt;/span> &lt;span class="nx">_&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">tc&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="k">range&lt;/span> &lt;span class="nx">testCases&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Printf&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;\n===== 测试用例: %s =====\n&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">tc&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">name&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Printf&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;原始JSON: %s\n&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">tc&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">input&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 在Go中计算预期摘要&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">goDigest&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nf">computeSHA1&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">tc&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">input&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Printf&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;Go计算的SHA1: %s\n&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">goDigest&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 插入数据库&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">id&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">err&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nf">insertJSON&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">db&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">tc&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">input&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">err&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="kc">nil&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">log&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Printf&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;插入失败: %v&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">err&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">continue&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 查询数据库&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">result&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">err&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nf">queryJSON&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">db&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">id&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">err&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="kc">nil&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">log&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Printf&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;查询失败: %v&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">err&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">continue&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 打印并验证结果&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;\n=== 数据库查询结果 ===&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Printf&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;返回的JSON内容: %s\n&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">result&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Content&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Printf&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;MySQL计算的摘要: %s\n&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">result&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Digest&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 摘要比对&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">result&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Digest&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="nx">goDigest&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;✅ 摘要一致: MySQL与Go计算结果相同&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span> &lt;span class="k">else&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;❌ 摘要不一致: MySQL与Go计算结果不同&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// JSON内容比对&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">result&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Content&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="nx">tc&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">input&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;✅ JSON内容一致: 与原始输入完全相同&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span> &lt;span class="k">else&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;⚠️ JSON内容变化: 与原始输入存在差异&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Printf&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;原始长度: %d | 返回长度: %d\n&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nb">len&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">tc&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">input&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="nb">len&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">result&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Content&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">computeSHA1&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">data&lt;/span> &lt;span class="kt">string&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="kt">string&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">hasher&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">sha1&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">New&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">hasher&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Write&lt;/span>&lt;span class="p">([]&lt;/span>&lt;span class="nb">byte&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">data&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="nx">hex&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">EncodeToString&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">hasher&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Sum&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kc">nil&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">insertJSON&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">db&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">sql&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">DB&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">jsonStr&lt;/span> &lt;span class="kt">string&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="kt">int64&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="kt">error&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">res&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">err&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">db&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Exec&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">`INSERT INTO json_test (content) VALUES (?)`&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">jsonStr&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">err&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="kc">nil&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">err&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="nx">res&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">LastInsertId&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">queryJSON&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">db&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">sql&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">DB&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">id&lt;/span> &lt;span class="kt">int64&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="nx">JSONTest&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="kt">error&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="kd">var&lt;/span> &lt;span class="nx">result&lt;/span> &lt;span class="nx">JSONTest&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">err&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">db&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">QueryRow&lt;/span>&lt;span class="p">(&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s">`SELECT id, content, digest FROM json_test WHERE id = ?`&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">id&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">).&lt;/span>&lt;span class="nf">Scan&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">result&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">ID&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">result&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Content&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">result&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Digest&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">result&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">err&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;blockquote>
+&lt;p>===== 测试用例: 紧凑JSON =====&lt;br>
+原始JSON: {&amp;ldquo;name&amp;rdquo;:&amp;ldquo;Alice&amp;rdquo;,&amp;ldquo;age&amp;rdquo;:30,&amp;ldquo;active&amp;rdquo;:true}&lt;br>
+Go计算的SHA1: 96179b68d41495dfd8f1c9bc7a093d92b56db6fe&lt;/p>
+&lt;p>=== 数据库查询结果 ===&lt;br>
+返回的JSON内容: {&amp;ldquo;age&amp;rdquo;: 30, &amp;ldquo;name&amp;rdquo;: &amp;ldquo;Alice&amp;rdquo;, &amp;ldquo;active&amp;rdquo;: true}&lt;br>
+MySQL计算的摘要: 2882e0534aec7725267c9295e89f61a47a3326ad&lt;br>
+❌ 摘要不一致: MySQL与Go计算结果不同&lt;br>
+⚠️ JSON内容变化: 与原始输入存在差异&lt;br>
+原始长度: 39 | 返回长度: 44&lt;/p>
+&lt;p>===== 测试用例: 带空格JSON =====&lt;br>
+原始JSON: { &amp;ldquo;name&amp;rdquo;: &amp;ldquo;Bob&amp;rdquo;, &amp;ldquo;age&amp;rdquo;: 25, &amp;ldquo;active&amp;rdquo;: false }&lt;br>
+Go计算的SHA1: 704bf774b19ca144d1e554968a72a6bf136088e0&lt;/p>
+&lt;p>=== 数据库查询结果 ===&lt;br>
+返回的JSON内容: {&amp;ldquo;age&amp;rdquo;: 25, &amp;ldquo;name&amp;rdquo;: &amp;ldquo;Bob&amp;rdquo;, &amp;ldquo;active&amp;rdquo;: false}&lt;br>
+MySQL计算的摘要: ce10e44c98b4332e900469a6b2ad740bbfe59343&lt;br>
+❌ 摘要不一致: MySQL与Go计算结果不同&lt;br>
+⚠️ JSON内容变化: 与原始输入存在差异&lt;br>
+原始长度: 45 | 返回长度: 43&lt;/p>&lt;/blockquote>
+&lt;hr>
+&lt;h1 id="解决方案">解决方案
+&lt;/h1>&lt;h2 id="-方案一业务侧生成摘要并写入">✅ 方案一：业务侧生成摘要并写入
+&lt;/h2>&lt;ul>
+&lt;li>在写入数据库前，由业务逻辑使用紧凑 JSON（无空格、固定顺序）生成摘要值。&lt;/li>
+&lt;li>将该摘要作为独立字段插入数据库，避免依赖 MySQL 返回的 JSON 字符串。&lt;/li>
+&lt;/ul>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-sql" data-lang="sql">&lt;span class="line">&lt;span class="cl">&lt;span class="k">INSERT&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">INTO&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">data_table&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">content&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">sha1&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">VALUES&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;{&amp;#34;key&amp;#34;:&amp;#34;value&amp;#34;}&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="s1">&amp;#39;228458095a9502070fc113d99504226a6ff90a9a&amp;#39;&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h2 id="-方案二存储-json-字符串而非-json-类型">✅ 方案二：存储 JSON 字符串，而非 JSON 类型
+&lt;/h2>&lt;ul>
+&lt;li>将 &lt;code>json&lt;/code> 字段声明为 &lt;code>TEXT&lt;/code> 或 &lt;code>VARCHAR&lt;/code> 类型。&lt;/li>
+&lt;li>避免 MySQL 对 JSON 内容进行解析和格式化，存什么、取什么。&lt;/li>
+&lt;/ul>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;span class="lnt">6
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-sql" data-lang="sql">&lt;span class="line">&lt;span class="cl">&lt;span class="k">CREATE&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">TABLE&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">data_table&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">id&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nb">INT&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">PRIMARY&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">KEY&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">content&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nb">TEXT&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">sha1&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nb">CHAR&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">40&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;blockquote>
+&lt;p>⚠️ 缺点是无法使用 JSON 类型的查询语法（如 JSON_EXTRACT）。&lt;/p>&lt;/blockquote>
+&lt;hr>
+&lt;h1 id="总结">总结
+&lt;/h1>&lt;p>MySQL 的 JSON 类型在插入与查询过程中可能会自动格式化，从而导致基于 JSON 字符串的摘要不一致。
+为避免此类问题，应在业务层确保摘要计算的一致性，或避免使用 MySQL 的 JSON 类型进行签名和哈希计算的核心数据字段。&lt;/p></description></item><item><title>OpenSSL 及 X509 证书相关</title><link>https://capriwits.com/post/openssl-and-x509-certificate-related/</link><pubDate>Sun, 26 Jan 2025 20:43:16 +0800</pubDate><guid>https://capriwits.com/post/openssl-and-x509-certificate-related/</guid><description>&lt;img src="https://capriwits.com/post/openssl-and-x509-certificate-related/openssl-icon.png" alt="Featured image of post OpenSSL 及 X509 证书相关" />&lt;!-- TOC -->
 &lt;ul>
 &lt;li>&lt;a class="link" href="#openssl-%e5%8f%8a-x509-%e8%af%81%e4%b9%a6%e7%9b%b8%e5%85%b3" >OpenSSL 及 X509 证书相关&lt;/a>&lt;/li>
 &lt;li>&lt;a class="link" href="#%e5%93%88%e5%b8%8c%e8%ae%a1%e7%ae%97" >哈希计算&lt;/a>&lt;/li>
@@ -575,8 +941,7 @@ days 天的时间，而不是起始时间开始追加；&lt;/p>
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
 &lt;/div>
 &lt;/div>&lt;blockquote>
-&lt;p>使用 CA 签发证书不能使用上述「快速生成证书和密钥」，因为需要用到 CSR 文件，因此需要单独生成密钥和 CSR&lt;/p>
-&lt;/blockquote>
+&lt;p>使用 CA 签发证书不能使用上述「快速生成证书和密钥」，因为需要用到 CSR 文件，因此需要单独生成密钥和 CSR&lt;/p>&lt;/blockquote>
 &lt;h3 id="ca签发证书与自签名证书不同点">CA签发证书与自签名证书不同点
 &lt;/h3>&lt;ul>
 &lt;li>自签名证书的 Issuer 颁发者也是自己&lt;/li>
@@ -747,8 +1112,7 @@ data-flex-basis="1011px"
 &lt;/div>
 &lt;/div>&lt;blockquote>
 &lt;p>注：该 CSR 里的扩展内容 Requested Extensions，直接应用到 X509 证书签发时，不会直接应用到证书中；例如 CSR 虽然配置了 SAN，但是
-X509 证书是没有的，必须在签发 X509 证书时显式指定出来&lt;/p>
-&lt;/blockquote>
+X509 证书是没有的，必须在签发 X509 证书时显式指定出来&lt;/p>&lt;/blockquote>
 &lt;div class="highlight">&lt;div class="chroma">
 &lt;table class="lntable">&lt;tr>&lt;td class="lntd">
 &lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
@@ -2363,8 +2727,7 @@ data-flex-basis="459px"
 &lt;/li>
 &lt;/ul>
 &lt;blockquote>
-&lt;p>重点在于迭代过程的 &lt;code>stack&lt;/code> 记录的节点不能漏（少更新高度和平衡），同时 &lt;code>stack&lt;/code> 压入的节点还需要保证相邻节点为父子关系&lt;/p>
-&lt;/blockquote>
+&lt;p>重点在于迭代过程的 &lt;code>stack&lt;/code> 记录的节点不能漏（少更新高度和平衡），同时 &lt;code>stack&lt;/code> 压入的节点还需要保证相邻节点为父子关系&lt;/p>&lt;/blockquote>
 &lt;p>以下代码问题在于：&lt;code>stack&lt;/code> 先记录了 &lt;code>[root, cur]&lt;/code> 位置，然后又记录了 &lt;code>[cur, successor]&lt;/code> ，但更新高度时，由于 &lt;code>cur&lt;/code> 已被删除，虽然
 &lt;code>pre&lt;/code> 的孩子已经改为 &lt;code>successor&lt;/code>，但是 &lt;code>cur&lt;/code> 已经入栈，在 &lt;code>stack.peek&lt;/code> 出的 &lt;code>pre&lt;/code> 还是会指向旧的 &lt;code>cur&lt;/code> 节点，引发错误&lt;/p>
 &lt;div class="highlight">&lt;div class="chroma">
@@ -5359,8 +5722,7 @@ data-flex-basis="477px"
 &lt;li>最后更新 &lt;code>y&lt;/code> 的孩子，&lt;code>y.left = x&lt;/code>, &lt;code>x.parent = y&lt;/code>；&lt;/li>
 &lt;/ol>
 &lt;blockquote>
-&lt;p>3 不能在 2 之前，是因为需要通过 &lt;code>x.parent&lt;/code> 找到老的 &lt;code>px&lt;/code>，否则 &lt;code>x.parent&lt;/code> 改为 &lt;code>y&lt;/code> 后，就找不到 &lt;code>px&lt;/code> 了&lt;/p>
-&lt;/blockquote>
+&lt;p>3 不能在 2 之前，是因为需要通过 &lt;code>x.parent&lt;/code> 找到老的 &lt;code>px&lt;/code>，否则 &lt;code>x.parent&lt;/code> 改为 &lt;code>y&lt;/code> 后，就找不到 &lt;code>px&lt;/code> 了&lt;/p>&lt;/blockquote>
 &lt;p>右旋就是左旋的镜像操作&lt;/p>
 &lt;div class="highlight">&lt;div class="chroma">
 &lt;table class="lntable">&lt;tr>&lt;td class="lntd">
@@ -6402,8 +6764,7 @@ data-flex-basis="477px"
 20(B)
 10(R 20 LE) 25(B 20 RI)
 5(B 10 LE) 15(B 10 RI)
-1(R 5 LE)&lt;/p>
-&lt;/blockquote>
+1(R 5 LE)&lt;/p>&lt;/blockquote>
 &lt;p>删除 20 时，直接后继是 25，25 替换 20 后，没办法让 25 的右子树 &lt;code>x&lt;/code> 替换 25，因为 &lt;code>x&lt;/code> 是 &lt;code>null&lt;/code>，无法指定 &lt;code>parent&lt;/code>，且后续还需要针对
 &lt;code>x&lt;/code> 进行平衡操作，因此 &lt;code>x&lt;/code> 作为双黑节点无法找到父节点和兄弟节点而无法平衡操作&lt;/p>
 &lt;h3 id="解决双黑-null-节点平衡问题">解决双黑 null 节点平衡问题
@@ -7751,14 +8112,12 @@ loading="lazy"
 &lt;/h2>&lt;p>Golang 模块需要 upsert MongoDB 的一个 Collection，该表的分片键 Sharding key 规则是指定 &lt;code>pid&lt;/code> 和 &lt;code>did&lt;/code> 双主键，
 业务上需要改为 &lt;code>did&lt;/code> 单主键，直接使用 golang mongo-driver 的 &lt;code>FindOneAndUpdate&lt;/code> 操作会报错&lt;/p>
 &lt;blockquote>
-&lt;p>&lt;code>shadow fail to Update Mongodb (ShardKeyNotFound) Query for sharded findAndModify must contain the shard key&lt;/code>&lt;/p>
-&lt;/blockquote>
+&lt;p>&lt;code>shadow fail to Update Mongodb (ShardKeyNotFound) Query for sharded findAndModify must contain the shard key&lt;/code>&lt;/p>&lt;/blockquote>
 &lt;p>原因是分片键的规则与查询的 filter 对不上（did 单主键&lt;/p>
 &lt;p>为了适配业务，需要将该表的分片规则进行修改，改为 did 单主键&lt;/p>
 &lt;p>测试环境：MongoDB 3.6 版本，分片两份 &lt;code>shard-0&lt;/code> 和 &lt;code>shard-1&lt;/code>&lt;/p>
 &lt;blockquote>
-&lt;p>以下方案需要停机操作，无法做到读写操作同时修改（需要将原表删除&lt;/p>
-&lt;/blockquote>
+&lt;p>以下方案需要停机操作，无法做到读写操作同时修改（需要将原表删除&lt;/p>&lt;/blockquote>
 &lt;h2 id="原理">原理
 &lt;/h2>&lt;p>参照 MySQL &lt;strong>影子拷贝法&lt;/strong>&lt;/p>
 &lt;p>将待修改表 &lt;code>base&lt;/code> 表 copy 一份影子 &lt;code>base_tmp&lt;/code>，该影子的分片键规则进行修改，再将 &lt;code>base&lt;/code> 表改为 &lt;code>base_bak&lt;/code> 用于冗余保留备份，也可 dump 成文件，然后 &lt;code>base_tmp&lt;/code> 改为 base 表&lt;/p>
@@ -7812,8 +8171,7 @@ loading="lazy"
 &lt;/div>
 &lt;/div>&lt;p>实际操作会在 &lt;code>renameCollection&lt;/code> 这一步报错&lt;/p>
 &lt;blockquote>
-&lt;p>&lt;code>You can't rename a sharded collection&lt;/code>&lt;/p>
-&lt;/blockquote>
+&lt;p>&lt;code>You can't rename a sharded collection&lt;/code>&lt;/p>&lt;/blockquote>
 &lt;p>不能修改一个分片的表，因此解决方案只能将数据 dump 出来，再 restore 回新分片的表里&lt;/p>
 &lt;h3 id="mongodump-和-mongorestore">mongodump 和 mongorestore
 &lt;/h3>&lt;div class="highlight">&lt;div class="chroma">
@@ -7859,8 +8217,7 @@ loading="lazy"
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
 &lt;/div>
 &lt;/div>&lt;blockquote>
-&lt;p>&lt;code>Failed: ota_car_online.ota_shadow_device_base: error creating indexes for ota_car_online.ota_shadow_device_base: createIndex error: { mongodb-mongodb-sharding-shard-0/mongodb-mongodb-sharding-shard0-data-0.mongodb-mongodb-sharding-headless.bota-basic.svc.cluster.local:27017, mongodb-mongodb-sharding-shard0-data-1.mongodb-mongodb-sharding-headless.bota-basic.svc.cluster.local:27017, mongodb-mongodb-sharding-shard0-data-2.mongodb-mongodb-sharding-headless.bota-basic.svc.cluster.local:27017: &amp;quot;request doesn't allow collection to be created implicitly&amp;quot;, mongodb-mongodb-sharding-shard-1/mongodb-mongodb-sharding-shard1-data-0.mongodb-mongodb-sharding-headless.bota-basic.svc.cluster.local:27017, mongodb-mongodb-sharding-shard1-data-1.mongodb-mongodb-sharding-headless.bota-basic.svc.cluster.local:27017, mongodb-mongodb-sharding-shard1-data-2.mongodb-mongodb-sharding-headless.bota-basic.svc.cluster.local:27017: &amp;quot;cannot create unique index over { pid: 1.0, did: 1.0 } with shard key pattern { did: 1.0 }&amp;quot; }&lt;/code>&lt;/p>
-&lt;/blockquote>
+&lt;p>&lt;code>Failed: ota_car_online.ota_shadow_device_base: error creating indexes for ota_car_online.ota_shadow_device_base: createIndex error: { mongodb-mongodb-sharding-shard-0/mongodb-mongodb-sharding-shard0-data-0.mongodb-mongodb-sharding-headless.bota-basic.svc.cluster.local:27017, mongodb-mongodb-sharding-shard0-data-1.mongodb-mongodb-sharding-headless.bota-basic.svc.cluster.local:27017, mongodb-mongodb-sharding-shard0-data-2.mongodb-mongodb-sharding-headless.bota-basic.svc.cluster.local:27017: &amp;quot;request doesn't allow collection to be created implicitly&amp;quot;, mongodb-mongodb-sharding-shard-1/mongodb-mongodb-sharding-shard1-data-0.mongodb-mongodb-sharding-headless.bota-basic.svc.cluster.local:27017, mongodb-mongodb-sharding-shard1-data-1.mongodb-mongodb-sharding-headless.bota-basic.svc.cluster.local:27017, mongodb-mongodb-sharding-shard1-data-2.mongodb-mongodb-sharding-headless.bota-basic.svc.cluster.local:27017: &amp;quot;cannot create unique index over { pid: 1.0, did: 1.0 } with shard key pattern { did: 1.0 }&amp;quot; }&lt;/code>&lt;/p>&lt;/blockquote>
 &lt;p>使用 &lt;code>mongodump&lt;/code> 指定 collection 只导出该 collection 的 bson 信息，但是还会带有额外的原始集合元数据，包括分片信息，因此旧数据的分片规则并不适用新分片集合中，所以 &lt;code>mongorestore&lt;/code> 会报错&lt;/p>
 &lt;h3 id="mongoexport-和-mongoimport">mongoexport 和 mongoimport
 &lt;/h3>&lt;p>mongoexport 和 mongoimport 的组合，一般涉及到单表，且纯数据操作，不涉及与 MongoDB 属性绑定的场景，例如导出导入 json csv 数据，因此使用该方案。&lt;/p>
@@ -8814,8 +9171,7 @@ alt="JDK21"
 &lt;/div>&lt;blockquote>
 &lt;p>getIndex called&lt;br>
 getValue called&lt;br>
-[4, -6, 6]&lt;/p>
-&lt;/blockquote>
+[4, -6, 6]&lt;/p>&lt;/blockquote>
 &lt;div class="highlight">&lt;div class="chroma">
 &lt;table class="lntable">&lt;tr>&lt;td class="lntd">
 &lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
@@ -9167,8 +9523,7 @@ loading="lazy"
 &lt;p>&lt;a class="link" href="https://github.com/openjdk/jdk/blob/36e2ddad4d2ef3ce27475af6244d0246a8315c0c/src/java.base/share/classes/java/lang/Double.java#L1117" target="_blank" rel="noopener"
 >OpenJDK Double::compare&lt;/a>&lt;/p>
 &lt;p>&lt;a class="link" href="https://docs.oracle.com/javase/8/docs/api/java/lang/Double.html#doubleToLongBits-double-" target="_blank" rel="noopener"
->JavaSE 8 doubleToLongBits&lt;/a>&lt;/p>
-&lt;/blockquote></description></item><item><title>Java For-loop For-each Iterator 效率分析</title><link>https://capriwits.com/post/java-for_loop_for_each_iterator-efficiency-analysis/</link><pubDate>Tue, 16 Mar 2021 10:37:29 +0800</pubDate><guid>https://capriwits.com/post/java-for_loop_for_each_iterator-efficiency-analysis/</guid><description>&lt;img src="https://capriwits.com/post/java-for_loop_for_each_iterator-efficiency-analysis/java-programming-cover.png" alt="Featured image of post Java For-loop For-each Iterator 效率分析" />&lt;!-- TOC -->
+>JavaSE 8 doubleToLongBits&lt;/a>&lt;/p>&lt;/blockquote></description></item><item><title>Java For-loop For-each Iterator 效率分析</title><link>https://capriwits.com/post/java-for_loop_for_each_iterator-efficiency-analysis/</link><pubDate>Tue, 16 Mar 2021 10:37:29 +0800</pubDate><guid>https://capriwits.com/post/java-for_loop_for_each_iterator-efficiency-analysis/</guid><description>&lt;img src="https://capriwits.com/post/java-for_loop_for_each_iterator-efficiency-analysis/java-programming-cover.png" alt="Featured image of post Java For-loop For-each Iterator 效率分析" />&lt;!-- TOC -->
 &lt;ul>
 &lt;li>&lt;a class="link" href="#java-for-loop-for-each-iterator-%e6%95%88%e7%8e%87%e5%88%86%e6%9e%90" >Java For-loop For-each Iterator 效率分析&lt;/a>
 &lt;ul>
@@ -9328,24 +9683,20 @@ alt="JMH1.37"
 &lt;/h3>&lt;blockquote>
 &lt;p>For loop: 99000&lt;br>
 Foreach: 321700&lt;br>
-Iterator: 194500&lt;/p>
-&lt;/blockquote>
+Iterator: 194500&lt;/p>&lt;/blockquote>
 &lt;h3 id="数量级10000">数量级：10,000
 &lt;/h3>&lt;blockquote>
 &lt;p>For loop: 933200&lt;br>
 Foreach: 942500&lt;br>
-Iterator: 585800&lt;/p>
-&lt;/blockquote>
+Iterator: 585800&lt;/p>&lt;/blockquote>
 &lt;h3 id="数量级100000">数量级：100,000
 &lt;/h3>&lt;blockquote>
 &lt;p>For loop: 3730800&lt;br>
 Foreach: 6669800&lt;br>
-Iterator: 5215100&lt;/p>
-&lt;/blockquote>
+Iterator: 5215100&lt;/p>&lt;/blockquote>
 &lt;blockquote>
 &lt;p>在小数量级上，&lt;code>For-loop&lt;/code> 效率会高一点，&lt;code>For &amp;lt; Iterator &amp;lt; For-each&lt;/code>，
-这里得出的结论根据时间消耗得出，无法仔细比较效率高低，数量级小时，&lt;code>For-loop&lt;/code> 效率高一点，整体来说，三者速度级别差不多。&lt;/p>
-&lt;/blockquote>
+这里得出的结论根据时间消耗得出，无法仔细比较效率高低，数量级小时，&lt;code>For-loop&lt;/code> 效率高一点，整体来说，三者速度级别差不多。&lt;/p>&lt;/blockquote>
 &lt;h2 id="jmh-benchmark-基准测试">JMH BenchMark 基准测试
 &lt;/h2>&lt;ul>
 &lt;li>使用到 &lt;code>JMH&lt;/code> 基准测试验证三种循环，数量级为百万&lt;/li>
@@ -9513,8 +9864,7 @@ data-flex-grow="158"
 data-flex-basis="380px"
 >&lt;/p>
 &lt;blockquote>
-&lt;p>严格来讲三者速度几乎不相上下，硬是要说最快，应该是原生 &lt;code>For-loop&lt;/code>, &lt;code>For-each&lt;/code> 和 &lt;code>Iterator&lt;/code> 应该是一样的&lt;/p>
-&lt;/blockquote>
+&lt;p>严格来讲三者速度几乎不相上下，硬是要说最快，应该是原生 &lt;code>For-loop&lt;/code>, &lt;code>For-each&lt;/code> 和 &lt;code>Iterator&lt;/code> 应该是一样的&lt;/p>&lt;/blockquote>
 &lt;h2 id="三种循环的使用建议">三种循环的使用建议
 &lt;/h2>&lt;p>&lt;code>《Effective Java》&lt;/code> 第三版第 58 条中建议，一般采用 &lt;code>Foreach&lt;/code> 进行循环，因为它在 &lt;code>简洁性&lt;/code>和 &lt;code>预防Bug&lt;/code>上优于 &lt;code>For-loop&lt;/code> 和 &lt;code>Iterator&lt;/code>（确切说是 Iterator 配合 while 使用）&lt;/p>
 &lt;h3 id="for-each-优势于-while-loop">For-each 优势于 While-loop
@@ -9528,8 +9878,7 @@ data-flex-basis="380px"
 &lt;blockquote>
 &lt;p>循环中提供了特殊的机会来将变量的作用域最小化。&lt;br>
 无论是传统的 for 循环，还是 for-each 形式的 for 循环，都允许声明&lt;strong>循环变量&lt;/strong>，它们的作用域被限定&lt;strong>在正好需要的范围&lt;/strong>之内。&lt;br>
-如果在循环终止之后&lt;strong>不再需要循环变量的内容&lt;/strong>，for-loop 就优先于 while-loop。&lt;/p>
-&lt;/blockquote>
+如果在循环终止之后&lt;strong>不再需要循环变量的内容&lt;/strong>，for-loop 就优先于 while-loop。&lt;/p>&lt;/blockquote>
 &lt;ul>
 &lt;li>如下是一种遍历集合的首选做法：&lt;/li>
 &lt;/ul>
@@ -9669,8 +10018,7 @@ TWO TWO&lt;br>
 THREE THREE&lt;br>
 FOUR FOUR&lt;br>
 FIVE FIVE&lt;br>
-SIX SIX&lt;/p>
-&lt;/blockquote>
+SIX SIX&lt;/p>&lt;/blockquote>
 &lt;p>同样的错误，也是重复调用 &lt;code>next&lt;/code>。这种程序不会抛出异常，所以往往找 bug 会特别难受&lt;/p>
 &lt;ul>
 &lt;li>下面开始修正此 bug&lt;/li>
@@ -9977,8 +10325,7 @@ loading="lazy"
 Exception in thread &amp;ldquo;main&amp;rdquo; java.util.ConcurrentModificationException&lt;br>
 at java.base/java.util.ArrayList$Itr.checkForComodification(ArrayList.java:937)&lt;br>
 at java.base/java.util.ArrayList$Itr.next(ArrayList.java:891)&lt;br>
-at Solution.main(Solution.java:14)&lt;/p>
-&lt;/blockquote>
+at Solution.main(Solution.java:14)&lt;/p>&lt;/blockquote>
 &lt;ul>
 &lt;li>然而删除 &lt;strong>倒数第二个&lt;/strong> 元素却不会报错&lt;/li>
 &lt;/ul>
@@ -10049,8 +10396,7 @@ at Solution.main(Solution.java:14)&lt;/p>
 &lt;/div>&lt;blockquote>
 &lt;p>a&lt;br>
 b&lt;br>
-[a, b, d]&lt;/p>
-&lt;/blockquote>
+[a, b, d]&lt;/p>&lt;/blockquote>
 &lt;h2 id="分析">分析
 &lt;/h2>&lt;ul>
 &lt;li>首先先观察 ArrayList 的 &lt;code>iterator()&lt;/code>，看迭代器怎么构造。&lt;/li>
@@ -10204,8 +10550,7 @@ b&lt;br>
 &lt;blockquote>
 &lt;p>The number of times this list has been structurally modified. Structural modifications are those that change the size of the list, or otherwise perturb it in such a fashion that iterations in progress may yield incorrect results.&lt;br>
 This field is used by the iterator and list iterator implementation returned by the iterator and listIterator methods. If the value of this field changes unexpectedly, the iterator (or list iterator) will throw a ConcurrentModificationException in response to the next, remove, previous, set or add operations. This provides fail-fast behavior, rather than non-deterministic behavior in the face of concurrent modification during iteration.&lt;br>
-Use of this field by subclasses is optional. If a subclass wishes to provide fail-fast iterators (and list iterators), then it merely has to increment this field in its add(int, E) and remove(int) methods (and any other methods that it overrides that result in structural modifications to the list). A single call to add(int, E) or remove(int) must add no more than one to this field, or the iterators (and list iterators) will throw bogus ConcurrentModificationExceptions. If an implementation does not wish to provide fail-fast iterators, this field may be ignored.&lt;/p>
-&lt;/blockquote>
+Use of this field by subclasses is optional. If a subclass wishes to provide fail-fast iterators (and list iterators), then it merely has to increment this field in its add(int, E) and remove(int) methods (and any other methods that it overrides that result in structural modifications to the list). A single call to add(int, E) or remove(int) must add no more than one to this field, or the iterators (and list iterators) will throw bogus ConcurrentModificationExceptions. If an implementation does not wish to provide fail-fast iterators, this field may be ignored.&lt;/p>&lt;/blockquote>
 &lt;div class="highlight">&lt;div class="chroma">
 &lt;table class="lntable">&lt;tr>&lt;td class="lntd">
 &lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
@@ -10336,6 +10681,5 @@ Use of this field by subclasses is optional. If a subclass wishes to provide fai
 &lt;p>b&lt;br>
 c&lt;br>
 d&lt;br>
-[b, c, d]&lt;/p>
-&lt;/blockquote>
+[b, c, d]&lt;/p>&lt;/blockquote>
 &lt;p>以上分析是基于 &lt;code>ArrayList&lt;/code>，基于链表的 &lt;code>LinkedList&lt;/code> 道理大同小异，思想不变，测试的结果也是不变的。&lt;/p></description></item></channel></rss>

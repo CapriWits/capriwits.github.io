@@ -546,8 +546,7 @@ data-flex-basis="459px"
 &lt;/li>
 &lt;/ul>
 &lt;blockquote>
-&lt;p>重点在于迭代过程的 &lt;code>stack&lt;/code> 记录的节点不能漏（少更新高度和平衡），同时 &lt;code>stack&lt;/code> 压入的节点还需要保证相邻节点为父子关系&lt;/p>
-&lt;/blockquote>
+&lt;p>重点在于迭代过程的 &lt;code>stack&lt;/code> 记录的节点不能漏（少更新高度和平衡），同时 &lt;code>stack&lt;/code> 压入的节点还需要保证相邻节点为父子关系&lt;/p>&lt;/blockquote>
 &lt;p>以下代码问题在于：&lt;code>stack&lt;/code> 先记录了 &lt;code>[root, cur]&lt;/code> 位置，然后又记录了 &lt;code>[cur, successor]&lt;/code> ，但更新高度时，由于 &lt;code>cur&lt;/code> 已被删除，虽然
 &lt;code>pre&lt;/code> 的孩子已经改为 &lt;code>successor&lt;/code>，但是 &lt;code>cur&lt;/code> 已经入栈，在 &lt;code>stack.peek&lt;/code> 出的 &lt;code>pre&lt;/code> 还是会指向旧的 &lt;code>cur&lt;/code> 节点，引发错误&lt;/p>
 &lt;div class="highlight">&lt;div class="chroma">
@@ -3542,8 +3541,7 @@ data-flex-basis="477px"
 &lt;li>最后更新 &lt;code>y&lt;/code> 的孩子，&lt;code>y.left = x&lt;/code>, &lt;code>x.parent = y&lt;/code>；&lt;/li>
 &lt;/ol>
 &lt;blockquote>
-&lt;p>3 不能在 2 之前，是因为需要通过 &lt;code>x.parent&lt;/code> 找到老的 &lt;code>px&lt;/code>，否则 &lt;code>x.parent&lt;/code> 改为 &lt;code>y&lt;/code> 后，就找不到 &lt;code>px&lt;/code> 了&lt;/p>
-&lt;/blockquote>
+&lt;p>3 不能在 2 之前，是因为需要通过 &lt;code>x.parent&lt;/code> 找到老的 &lt;code>px&lt;/code>，否则 &lt;code>x.parent&lt;/code> 改为 &lt;code>y&lt;/code> 后，就找不到 &lt;code>px&lt;/code> 了&lt;/p>&lt;/blockquote>
 &lt;p>右旋就是左旋的镜像操作&lt;/p>
 &lt;div class="highlight">&lt;div class="chroma">
 &lt;table class="lntable">&lt;tr>&lt;td class="lntd">
@@ -4585,8 +4583,7 @@ data-flex-basis="477px"
 20(B)
 10(R 20 LE) 25(B 20 RI)
 5(B 10 LE) 15(B 10 RI)
-1(R 5 LE)&lt;/p>
-&lt;/blockquote>
+1(R 5 LE)&lt;/p>&lt;/blockquote>
 &lt;p>删除 20 时，直接后继是 25，25 替换 20 后，没办法让 25 的右子树 &lt;code>x&lt;/code> 替换 25，因为 &lt;code>x&lt;/code> 是 &lt;code>null&lt;/code>，无法指定 &lt;code>parent&lt;/code>，且后续还需要针对
 &lt;code>x&lt;/code> 进行平衡操作，因此 &lt;code>x&lt;/code> 作为双黑节点无法找到父节点和兄弟节点而无法平衡操作&lt;/p>
 &lt;h3 id="解决双黑-null-节点平衡问题">解决双黑 null 节点平衡问题

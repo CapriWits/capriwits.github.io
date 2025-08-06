@@ -23,14 +23,12 @@ loading="lazy"
 &lt;/h2>&lt;p>Golang 模块需要 upsert MongoDB 的一个 Collection，该表的分片键 Sharding key 规则是指定 &lt;code>pid&lt;/code> 和 &lt;code>did&lt;/code> 双主键，
 业务上需要改为 &lt;code>did&lt;/code> 单主键，直接使用 golang mongo-driver 的 &lt;code>FindOneAndUpdate&lt;/code> 操作会报错&lt;/p>
 &lt;blockquote>
-&lt;p>&lt;code>shadow fail to Update Mongodb (ShardKeyNotFound) Query for sharded findAndModify must contain the shard key&lt;/code>&lt;/p>
-&lt;/blockquote>
+&lt;p>&lt;code>shadow fail to Update Mongodb (ShardKeyNotFound) Query for sharded findAndModify must contain the shard key&lt;/code>&lt;/p>&lt;/blockquote>
 &lt;p>原因是分片键的规则与查询的 filter 对不上（did 单主键&lt;/p>
 &lt;p>为了适配业务，需要将该表的分片规则进行修改，改为 did 单主键&lt;/p>
 &lt;p>测试环境：MongoDB 3.6 版本，分片两份 &lt;code>shard-0&lt;/code> 和 &lt;code>shard-1&lt;/code>&lt;/p>
 &lt;blockquote>
-&lt;p>以下方案需要停机操作，无法做到读写操作同时修改（需要将原表删除&lt;/p>
-&lt;/blockquote>
+&lt;p>以下方案需要停机操作，无法做到读写操作同时修改（需要将原表删除&lt;/p>&lt;/blockquote>
 &lt;h2 id="原理">原理
 &lt;/h2>&lt;p>参照 MySQL &lt;strong>影子拷贝法&lt;/strong>&lt;/p>
 &lt;p>将待修改表 &lt;code>base&lt;/code> 表 copy 一份影子 &lt;code>base_tmp&lt;/code>，该影子的分片键规则进行修改，再将 &lt;code>base&lt;/code> 表改为 &lt;code>base_bak&lt;/code> 用于冗余保留备份，也可 dump 成文件，然后 &lt;code>base_tmp&lt;/code> 改为 base 表&lt;/p>
@@ -84,8 +82,7 @@ loading="lazy"
 &lt;/div>
 &lt;/div>&lt;p>实际操作会在 &lt;code>renameCollection&lt;/code> 这一步报错&lt;/p>
 &lt;blockquote>
-&lt;p>&lt;code>You can't rename a sharded collection&lt;/code>&lt;/p>
-&lt;/blockquote>
+&lt;p>&lt;code>You can't rename a sharded collection&lt;/code>&lt;/p>&lt;/blockquote>
 &lt;p>不能修改一个分片的表，因此解决方案只能将数据 dump 出来，再 restore 回新分片的表里&lt;/p>
 &lt;h3 id="mongodump-和-mongorestore">mongodump 和 mongorestore
 &lt;/h3>&lt;div class="highlight">&lt;div class="chroma">
@@ -131,8 +128,7 @@ loading="lazy"
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
 &lt;/div>
 &lt;/div>&lt;blockquote>
-&lt;p>&lt;code>Failed: ota_car_online.ota_shadow_device_base: error creating indexes for ota_car_online.ota_shadow_device_base: createIndex error: { mongodb-mongodb-sharding-shard-0/mongodb-mongodb-sharding-shard0-data-0.mongodb-mongodb-sharding-headless.bota-basic.svc.cluster.local:27017, mongodb-mongodb-sharding-shard0-data-1.mongodb-mongodb-sharding-headless.bota-basic.svc.cluster.local:27017, mongodb-mongodb-sharding-shard0-data-2.mongodb-mongodb-sharding-headless.bota-basic.svc.cluster.local:27017: &amp;quot;request doesn't allow collection to be created implicitly&amp;quot;, mongodb-mongodb-sharding-shard-1/mongodb-mongodb-sharding-shard1-data-0.mongodb-mongodb-sharding-headless.bota-basic.svc.cluster.local:27017, mongodb-mongodb-sharding-shard1-data-1.mongodb-mongodb-sharding-headless.bota-basic.svc.cluster.local:27017, mongodb-mongodb-sharding-shard1-data-2.mongodb-mongodb-sharding-headless.bota-basic.svc.cluster.local:27017: &amp;quot;cannot create unique index over { pid: 1.0, did: 1.0 } with shard key pattern { did: 1.0 }&amp;quot; }&lt;/code>&lt;/p>
-&lt;/blockquote>
+&lt;p>&lt;code>Failed: ota_car_online.ota_shadow_device_base: error creating indexes for ota_car_online.ota_shadow_device_base: createIndex error: { mongodb-mongodb-sharding-shard-0/mongodb-mongodb-sharding-shard0-data-0.mongodb-mongodb-sharding-headless.bota-basic.svc.cluster.local:27017, mongodb-mongodb-sharding-shard0-data-1.mongodb-mongodb-sharding-headless.bota-basic.svc.cluster.local:27017, mongodb-mongodb-sharding-shard0-data-2.mongodb-mongodb-sharding-headless.bota-basic.svc.cluster.local:27017: &amp;quot;request doesn't allow collection to be created implicitly&amp;quot;, mongodb-mongodb-sharding-shard-1/mongodb-mongodb-sharding-shard1-data-0.mongodb-mongodb-sharding-headless.bota-basic.svc.cluster.local:27017, mongodb-mongodb-sharding-shard1-data-1.mongodb-mongodb-sharding-headless.bota-basic.svc.cluster.local:27017, mongodb-mongodb-sharding-shard1-data-2.mongodb-mongodb-sharding-headless.bota-basic.svc.cluster.local:27017: &amp;quot;cannot create unique index over { pid: 1.0, did: 1.0 } with shard key pattern { did: 1.0 }&amp;quot; }&lt;/code>&lt;/p>&lt;/blockquote>
 &lt;p>使用 &lt;code>mongodump&lt;/code> 指定 collection 只导出该 collection 的 bson 信息，但是还会带有额外的原始集合元数据，包括分片信息，因此旧数据的分片规则并不适用新分片集合中，所以 &lt;code>mongorestore&lt;/code> 会报错&lt;/p>
 &lt;h3 id="mongoexport-和-mongoimport">mongoexport 和 mongoimport
 &lt;/h3>&lt;p>mongoexport 和 mongoimport 的组合，一般涉及到单表，且纯数据操作，不涉及与 MongoDB 属性绑定的场景，例如导出导入 json csv 数据，因此使用该方案。&lt;/p>

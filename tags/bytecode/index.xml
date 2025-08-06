@@ -125,8 +125,7 @@ alt="JDK21"
 &lt;/div>&lt;blockquote>
 &lt;p>getIndex called&lt;br>
 getValue called&lt;br>
-[4, -6, 6]&lt;/p>
-&lt;/blockquote>
+[4, -6, 6]&lt;/p>&lt;/blockquote>
 &lt;div class="highlight">&lt;div class="chroma">
 &lt;table class="lntable">&lt;tr>&lt;td class="lntd">
 &lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1

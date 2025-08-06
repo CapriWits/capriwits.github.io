@@ -575,8 +575,7 @@ days 天的时间，而不是起始时间开始追加；&lt;/p>
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
 &lt;/div>
 &lt;/div>&lt;blockquote>
-&lt;p>使用 CA 签发证书不能使用上述「快速生成证书和密钥」，因为需要用到 CSR 文件，因此需要单独生成密钥和 CSR&lt;/p>
-&lt;/blockquote>
+&lt;p>使用 CA 签发证书不能使用上述「快速生成证书和密钥」，因为需要用到 CSR 文件，因此需要单独生成密钥和 CSR&lt;/p>&lt;/blockquote>
 &lt;h3 id="ca签发证书与自签名证书不同点">CA签发证书与自签名证书不同点
 &lt;/h3>&lt;ul>
 &lt;li>自签名证书的 Issuer 颁发者也是自己&lt;/li>
@@ -747,8 +746,7 @@ data-flex-basis="1011px"
 &lt;/div>
 &lt;/div>&lt;blockquote>
 &lt;p>注：该 CSR 里的扩展内容 Requested Extensions，直接应用到 X509 证书签发时，不会直接应用到证书中；例如 CSR 虽然配置了 SAN，但是
-X509 证书是没有的，必须在签发 X509 证书时显式指定出来&lt;/p>
-&lt;/blockquote>
+X509 证书是没有的，必须在签发 X509 证书时显式指定出来&lt;/p>&lt;/blockquote>
 &lt;div class="highlight">&lt;div class="chroma">
 &lt;table class="lntable">&lt;tr>&lt;td class="lntd">
 &lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1

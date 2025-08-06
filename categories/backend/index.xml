@@ -575,8 +575,7 @@ days 天的时间，而不是起始时间开始追加；&lt;/p>
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
 &lt;/div>
 &lt;/div>&lt;blockquote>
-&lt;p>使用 CA 签发证书不能使用上述「快速生成证书和密钥」，因为需要用到 CSR 文件，因此需要单独生成密钥和 CSR&lt;/p>
-&lt;/blockquote>
+&lt;p>使用 CA 签发证书不能使用上述「快速生成证书和密钥」，因为需要用到 CSR 文件，因此需要单独生成密钥和 CSR&lt;/p>&lt;/blockquote>
 &lt;h3 id="ca签发证书与自签名证书不同点">CA签发证书与自签名证书不同点
 &lt;/h3>&lt;ul>
 &lt;li>自签名证书的 Issuer 颁发者也是自己&lt;/li>
@@ -747,8 +746,7 @@ data-flex-basis="1011px"
 &lt;/div>
 &lt;/div>&lt;blockquote>
 &lt;p>注：该 CSR 里的扩展内容 Requested Extensions，直接应用到 X509 证书签发时，不会直接应用到证书中；例如 CSR 虽然配置了 SAN，但是
-X509 证书是没有的，必须在签发 X509 证书时显式指定出来&lt;/p>
-&lt;/blockquote>
+X509 证书是没有的，必须在签发 X509 证书时显式指定出来&lt;/p>&lt;/blockquote>
 &lt;div class="highlight">&lt;div class="chroma">
 &lt;table class="lntable">&lt;tr>&lt;td class="lntd">
 &lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
@@ -3497,8 +3495,7 @@ alt="JDK21"
 &lt;/div>&lt;blockquote>
 &lt;p>getIndex called&lt;br>
 getValue called&lt;br>
-[4, -6, 6]&lt;/p>
-&lt;/blockquote>
+[4, -6, 6]&lt;/p>&lt;/blockquote>
 &lt;div class="highlight">&lt;div class="chroma">
 &lt;table class="lntable">&lt;tr>&lt;td class="lntd">
 &lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
@@ -3850,8 +3847,7 @@ loading="lazy"
 &lt;p>&lt;a class="link" href="https://github.com/openjdk/jdk/blob/36e2ddad4d2ef3ce27475af6244d0246a8315c0c/src/java.base/share/classes/java/lang/Double.java#L1117" target="_blank" rel="noopener"
 >OpenJDK Double::compare&lt;/a>&lt;/p>
 &lt;p>&lt;a class="link" href="https://docs.oracle.com/javase/8/docs/api/java/lang/Double.html#doubleToLongBits-double-" target="_blank" rel="noopener"
->JavaSE 8 doubleToLongBits&lt;/a>&lt;/p>
-&lt;/blockquote></description></item><item><title>Java For-loop For-each Iterator 效率分析</title><link>https://capriwits.com/post/java-for_loop_for_each_iterator-efficiency-analysis/</link><pubDate>Tue, 16 Mar 2021 10:37:29 +0800</pubDate><guid>https://capriwits.com/post/java-for_loop_for_each_iterator-efficiency-analysis/</guid><description>&lt;img src="https://capriwits.com/post/java-for_loop_for_each_iterator-efficiency-analysis/java-programming-cover.png" alt="Featured image of post Java For-loop For-each Iterator 效率分析" />&lt;!-- TOC -->
+>JavaSE 8 doubleToLongBits&lt;/a>&lt;/p>&lt;/blockquote></description></item><item><title>Java For-loop For-each Iterator 效率分析</title><link>https://capriwits.com/post/java-for_loop_for_each_iterator-efficiency-analysis/</link><pubDate>Tue, 16 Mar 2021 10:37:29 +0800</pubDate><guid>https://capriwits.com/post/java-for_loop_for_each_iterator-efficiency-analysis/</guid><description>&lt;img src="https://capriwits.com/post/java-for_loop_for_each_iterator-efficiency-analysis/java-programming-cover.png" alt="Featured image of post Java For-loop For-each Iterator 效率分析" />&lt;!-- TOC -->
 &lt;ul>
 &lt;li>&lt;a class="link" href="#java-for-loop-for-each-iterator-%e6%95%88%e7%8e%87%e5%88%86%e6%9e%90" >Java For-loop For-each Iterator 效率分析&lt;/a>
 &lt;ul>
@@ -4011,24 +4007,20 @@ alt="JMH1.37"
 &lt;/h3>&lt;blockquote>
 &lt;p>For loop: 99000&lt;br>
 Foreach: 321700&lt;br>
-Iterator: 194500&lt;/p>
-&lt;/blockquote>
+Iterator: 194500&lt;/p>&lt;/blockquote>
 &lt;h3 id="数量级10000">数量级：10,000
 &lt;/h3>&lt;blockquote>
 &lt;p>For loop: 933200&lt;br>
 Foreach: 942500&lt;br>
-Iterator: 585800&lt;/p>
-&lt;/blockquote>
+Iterator: 585800&lt;/p>&lt;/blockquote>
 &lt;h3 id="数量级100000">数量级：100,000
 &lt;/h3>&lt;blockquote>
 &lt;p>For loop: 3730800&lt;br>
 Foreach: 6669800&lt;br>
-Iterator: 5215100&lt;/p>
-&lt;/blockquote>
+Iterator: 5215100&lt;/p>&lt;/blockquote>
 &lt;blockquote>
 &lt;p>在小数量级上，&lt;code>For-loop&lt;/code> 效率会高一点，&lt;code>For &amp;lt; Iterator &amp;lt; For-each&lt;/code>，
-这里得出的结论根据时间消耗得出，无法仔细比较效率高低，数量级小时，&lt;code>For-loop&lt;/code> 效率高一点，整体来说，三者速度级别差不多。&lt;/p>
-&lt;/blockquote>
+这里得出的结论根据时间消耗得出，无法仔细比较效率高低，数量级小时，&lt;code>For-loop&lt;/code> 效率高一点，整体来说，三者速度级别差不多。&lt;/p>&lt;/blockquote>
 &lt;h2 id="jmh-benchmark-基准测试">JMH BenchMark 基准测试
 &lt;/h2>&lt;ul>
 &lt;li>使用到 &lt;code>JMH&lt;/code> 基准测试验证三种循环，数量级为百万&lt;/li>
@@ -4196,8 +4188,7 @@ data-flex-grow="158"
 data-flex-basis="380px"
 >&lt;/p>
 &lt;blockquote>
-&lt;p>严格来讲三者速度几乎不相上下，硬是要说最快，应该是原生 &lt;code>For-loop&lt;/code>, &lt;code>For-each&lt;/code> 和 &lt;code>Iterator&lt;/code> 应该是一样的&lt;/p>
-&lt;/blockquote>
+&lt;p>严格来讲三者速度几乎不相上下，硬是要说最快，应该是原生 &lt;code>For-loop&lt;/code>, &lt;code>For-each&lt;/code> 和 &lt;code>Iterator&lt;/code> 应该是一样的&lt;/p>&lt;/blockquote>
 &lt;h2 id="三种循环的使用建议">三种循环的使用建议
 &lt;/h2>&lt;p>&lt;code>《Effective Java》&lt;/code> 第三版第 58 条中建议，一般采用 &lt;code>Foreach&lt;/code> 进行循环，因为它在 &lt;code>简洁性&lt;/code>和 &lt;code>预防Bug&lt;/code>上优于 &lt;code>For-loop&lt;/code> 和 &lt;code>Iterator&lt;/code>（确切说是 Iterator 配合 while 使用）&lt;/p>
 &lt;h3 id="for-each-优势于-while-loop">For-each 优势于 While-loop
@@ -4211,8 +4202,7 @@ data-flex-basis="380px"
 &lt;blockquote>
 &lt;p>循环中提供了特殊的机会来将变量的作用域最小化。&lt;br>
 无论是传统的 for 循环，还是 for-each 形式的 for 循环，都允许声明&lt;strong>循环变量&lt;/strong>，它们的作用域被限定&lt;strong>在正好需要的范围&lt;/strong>之内。&lt;br>
-如果在循环终止之后&lt;strong>不再需要循环变量的内容&lt;/strong>，for-loop 就优先于 while-loop。&lt;/p>
-&lt;/blockquote>
+如果在循环终止之后&lt;strong>不再需要循环变量的内容&lt;/strong>，for-loop 就优先于 while-loop。&lt;/p>&lt;/blockquote>
 &lt;ul>
 &lt;li>如下是一种遍历集合的首选做法：&lt;/li>
 &lt;/ul>
@@ -4352,8 +4342,7 @@ TWO TWO&lt;br>
 THREE THREE&lt;br>
 FOUR FOUR&lt;br>
 FIVE FIVE&lt;br>
-SIX SIX&lt;/p>
-&lt;/blockquote>
+SIX SIX&lt;/p>&lt;/blockquote>
 &lt;p>同样的错误，也是重复调用 &lt;code>next&lt;/code>。这种程序不会抛出异常，所以往往找 bug 会特别难受&lt;/p>
 &lt;ul>
 &lt;li>下面开始修正此 bug&lt;/li>
@@ -4660,8 +4649,7 @@ loading="lazy"
 Exception in thread &amp;ldquo;main&amp;rdquo; java.util.ConcurrentModificationException&lt;br>
 at java.base/java.util.ArrayList$Itr.checkForComodification(ArrayList.java:937)&lt;br>
 at java.base/java.util.ArrayList$Itr.next(ArrayList.java:891)&lt;br>
-at Solution.main(Solution.java:14)&lt;/p>
-&lt;/blockquote>
+at Solution.main(Solution.java:14)&lt;/p>&lt;/blockquote>
 &lt;ul>
 &lt;li>然而删除 &lt;strong>倒数第二个&lt;/strong> 元素却不会报错&lt;/li>
 &lt;/ul>
@@ -4732,8 +4720,7 @@ at Solution.main(Solution.java:14)&lt;/p>
 &lt;/div>&lt;blockquote>
 &lt;p>a&lt;br>
 b&lt;br>
-[a, b, d]&lt;/p>
-&lt;/blockquote>
+[a, b, d]&lt;/p>&lt;/blockquote>
 &lt;h2 id="分析">分析
 &lt;/h2>&lt;ul>
 &lt;li>首先先观察 ArrayList 的 &lt;code>iterator()&lt;/code>，看迭代器怎么构造。&lt;/li>
@@ -4887,8 +4874,7 @@ b&lt;br>
 &lt;blockquote>
 &lt;p>The number of times this list has been structurally modified. Structural modifications are those that change the size of the list, or otherwise perturb it in such a fashion that iterations in progress may yield incorrect results.&lt;br>
 This field is used by the iterator and list iterator implementation returned by the iterator and listIterator methods. If the value of this field changes unexpectedly, the iterator (or list iterator) will throw a ConcurrentModificationException in response to the next, remove, previous, set or add operations. This provides fail-fast behavior, rather than non-deterministic behavior in the face of concurrent modification during iteration.&lt;br>
-Use of this field by subclasses is optional. If a subclass wishes to provide fail-fast iterators (and list iterators), then it merely has to increment this field in its add(int, E) and remove(int) methods (and any other methods that it overrides that result in structural modifications to the list). A single call to add(int, E) or remove(int) must add no more than one to this field, or the iterators (and list iterators) will throw bogus ConcurrentModificationExceptions. If an implementation does not wish to provide fail-fast iterators, this field may be ignored.&lt;/p>
-&lt;/blockquote>
+Use of this field by subclasses is optional. If a subclass wishes to provide fail-fast iterators (and list iterators), then it merely has to increment this field in its add(int, E) and remove(int) methods (and any other methods that it overrides that result in structural modifications to the list). A single call to add(int, E) or remove(int) must add no more than one to this field, or the iterators (and list iterators) will throw bogus ConcurrentModificationExceptions. If an implementation does not wish to provide fail-fast iterators, this field may be ignored.&lt;/p>&lt;/blockquote>
 &lt;div class="highlight">&lt;div class="chroma">
 &lt;table class="lntable">&lt;tr>&lt;td class="lntd">
 &lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
@@ -5019,6 +5005,5 @@ Use of this field by subclasses is optional. If a subclass wishes to provide fai
 &lt;p>b&lt;br>
 c&lt;br>
 d&lt;br>
-[b, c, d]&lt;/p>
-&lt;/blockquote>
+[b, c, d]&lt;/p>&lt;/blockquote>
 &lt;p>以上分析是基于 &lt;code>ArrayList&lt;/code>，基于链表的 &lt;code>LinkedList&lt;/code> 道理大同小异，思想不变，测试的结果也是不变的。&lt;/p></description></item></channel></rss>
